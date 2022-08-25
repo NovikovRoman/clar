@@ -12,7 +12,7 @@ import (
 	"time"
 	"unsafe"
 
-	"{{.Module}}/domain/entity"
+	"github.com/NovikovRoman/fsspru/domain/entity"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -38,17 +38,9 @@ func save(
 		setUpdatedAt(v, time.Now())
 	}
 
-	var fields []string
-	if fields, err = tableFields(ent); err != nil {
-		return
-	}
-
 	var set string
-	for i, name := range fields {
-		if i > 0 {
-			set += ","
-		}
-		set += "{{.Backtick}}" + name + "{{.Backtick}}=:" + name
+	if set, err = fieldsForUpdate(ent); err != nil {
+		return
 	}
 
 	query := "UPDATE {{.Backtick}}" + table + "{{.Backtick}} SET " + set + " WHERE id=:id"
@@ -89,22 +81,12 @@ func create(
 		}
 	}
 
-	var fields []string
-	if fields, err = tableFields(ent); err != nil {
-		return
-	}
-
 	var (
 		set    string
 		values string
 	)
-	for i, name := range fields {
-		if i > 0 {
-			set += ","
-			values += ","
-		}
-		set += "{{.Backtick}}" + name + "{{.Backtick}}"
-		values += ":" + name
+	if set, values, err = fieldsForInsert(ent); err != nil {
+		return
 	}
 
 	var res sql.Result
@@ -198,6 +180,38 @@ func setDeletedAt(ent entity.EntityInterface, t *time.Time) {
 		return
 	}
 	v.FieldByName("DeletedAt").SetPointer(nil)
+}
+
+func fieldsForInsert(ent interface{}) (set string, values string, err error) {
+	var fields []string
+	if fields, err = tableFields(ent); err != nil {
+		return
+	}
+
+	for i, name := range fields {
+		if i > 0 {
+			set += ","
+			values += ","
+		}
+		set += "{{.Backtick}}" + name + "{{.Backtick}}"
+		values += ":" + name
+	}
+	return
+}
+
+func fieldsForUpdate(ent interface{}) (set string, err error) {
+	var fields []string
+	if fields, err = tableFields(ent); err != nil {
+		return
+	}
+
+	for i, name := range fields {
+		if i > 0 {
+			set += ","
+		}
+		set += "{{.Backtick}}" + name + "{{.Backtick}}=:" + name
+	}
+	return
 }
 
 func tableFields(ent interface{}) (fields []string, err error) {

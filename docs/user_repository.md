@@ -24,6 +24,10 @@ func NewUserRepository(db *sqlx.DB) repository.UserRepositoryInterface {
 	}
 }
 
+func (r *userRepository) GetTable() string {
+	return r.table
+}
+
 func (r *userRepository) GetByID(ctx context.Context, id int64) (user *entity.User, err error) {
 	user = &entity.User{}
 	err = r.db.Get(&user, "SELECT * FROM `"+r.table+"` WHERE `id` = ?", id)
