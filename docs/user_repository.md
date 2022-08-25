@@ -24,7 +24,7 @@ func NewUserRepository(db *sqlx.DB) repository.UserRepositoryInterface {
 	}
 }
 
-func (r *userRepository) GetTable() string {
+func (r *userRepository) Table() string {
 	return r.table
 }
 

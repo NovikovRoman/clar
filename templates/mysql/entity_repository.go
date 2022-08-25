@@ -23,7 +23,7 @@ func New{{.Entity}}Repository(db *sqlx.DB) repository.{{.Entity}}RepositoryInter
 	}
 }
 
-func (r *{{.EntityName}}Repository) GetTable() string {
+func (r *{{.EntityName}}Repository) Table() string {
 	return r.table
 }
 
