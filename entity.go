@@ -110,12 +110,14 @@ func createMysqlEntityFiles(module string, ent *entity, dbType *DBType) (err err
 
 	data := struct {
 		Module      string
+		Backtick    string
 		Table       string
 		Entity      string
 		EntityName  string
 		EntityTable string
 	}{
 		Module:      modulePath,
+		Backtick:    backtick,
 		Table:       ent.table,
 		Entity:      ent.structName,
 		EntityName:  ent.name,
