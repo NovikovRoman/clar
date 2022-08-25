@@ -4,6 +4,7 @@ const EntityRepository = `package mysql
 
 import (
 	"context"
+	"database/sql"
 
 	"{{.Module}}/domain/entity"
 	"{{.Module}}/domain/repository"
@@ -23,7 +24,12 @@ func New{{.Entity}}Repository(db *sqlx.DB) repository.{{.Entity}}RepositoryInter
 }
 
 func (r *{{.EntityName}}Repository) GetByID(ctx context.Context, id int64) ({{.EntityName}} *entity.{{.Entity}}, err error) {
-	// our code …
+	{{.EntityName}} = &entity.{{.Entity}}{}
+	err = r.db.Get(&{{.EntityName}}, "SELECT * FROM {{.Backtick}}"+r.table+"{{.Backtick}} WHERE {{.Backtick}}id{{.Backtick}} = ?", id)
+	if err == sql.ErrNoRows {
+		err = nil
+		{{.EntityName}} = nil
+	}
 	return
 }
 

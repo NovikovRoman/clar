@@ -5,6 +5,7 @@ package mysql
 
 import (
 	"context"
+	"database/sql"
 
 	"github.com/NovikovRoman/clar/domain/entity"
 	"github.com/NovikovRoman/clar/domain/repository"
@@ -24,7 +25,12 @@ func NewUserRepository(db *sqlx.DB) repository.UserRepositoryInterface {
 }
 
 func (r *userRepository) GetByID(ctx context.Context, id int64) (user *entity.User, err error) {
-	// our code …
+	user = &entity.User{}
+	err = r.db.Get(&user, "SELECT * FROM `"+r.table+"` WHERE `id` = ?", id)
+	if err == sql.ErrNoRows {
+		err = nil
+		user = nil
+	}
 	return
 }
 
