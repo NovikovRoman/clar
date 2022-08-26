@@ -30,7 +30,7 @@ func (r *userRepository) Table() string {
 
 func (r *userRepository) GetByID(ctx context.Context, id int64) (user *entity.User, err error) {
 	user = &entity.User{}
-	err = r.db.Get(&user, "SELECT * FROM `"+r.table+"` WHERE `id` = ?", id)
+	err = r.db.GetContext(ctx, &user, "SELECT * FROM `"+r.table+"` WHERE `id` = ?", id)
 	if err == sql.ErrNoRows {
 		err = nil
 		user = nil
