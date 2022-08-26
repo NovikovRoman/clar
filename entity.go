@@ -88,12 +88,8 @@ func initBasicEntityFiles(ent *entity, dbType *DBType, simple bool) (err error) 
 		return
 	}
 
-	tmplName = "repository.interface"
-	if simple {
-		tmplName = "repository.simple_interface"
-	}
 	filename = filepath.Join(dirRepository, ent.snakeName+"_repository_interface.go")
-	err = saveTemplate(filename, getTemplate(tmplName), data)
+	err = saveTemplate(filename, getTemplate("repository.interface"), data)
 	return
 }
 

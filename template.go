@@ -22,9 +22,6 @@ func getTemplate(name string) string {
 	case "repository.interface":
 		return templates.RepositoryInterface
 
-	case "repository.simple_interface":
-		return templates.SimpleRepositoryInterface
-
 	default:
 		return ""
 	}

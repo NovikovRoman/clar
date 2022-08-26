@@ -16,17 +16,3 @@ type {{.Entity}}RepositoryInterface interface {
 	Remove(ctx context.Context, {{.EntityName}} *entity.{{.Entity}}) (err error)
 }
 `
-
-const SimpleRepositoryInterface = `package repository
-
-import (
-	"context"
-
-	"{{.Module}}/domain/entity"
-)
-
-type {{.Entity}}RepositoryInterface interface {
-	Table() string
-	GetByID(ctx context.Context, id int64) ({{.EntityName}} *entity.{{.Entity}}, err error)
-}
-`
