@@ -50,17 +50,18 @@ clar e [-n name|--name=name]
 ```
 or
 ```shell script
-clar entity -n name|--name=name [-d dbtype|--db=dbtype] [-s|--simple]
+clar entity -n name|--name=name [-d dbtype|--db=dbtype] [-s|--simple] or [-e|--empty]
 ```
 - `name` - entity name (required).
 - `dbtype` - for what type of database (default: `mysql`).
 - `-s`, `--simple` - simple entity.
+- `-e`, `--empty` - empty entity.
 
 Will be created (example `clar i -nuser`):
 
-- [`domain/repository/user_repository_interface.go`](docs/user_repository_interface.md)
-- [`domain/repository/entity/user.go`](docs/user.md) or if the `-s` flag is specified [`domain/repository/entity/user.go`](docs/simple_user.md)
-- For MySQL: [domain/repository/mysql/user_repository.go](docs/user_repository.md)
+- [`domain/repository/user_repository_interface.go`](docs/user_repository_interface.md) or if the `-e` flag is specified [`user_repository_interface.go`](docs/empty_user_repository_interface.md)
+- [`domain/repository/entity/user.go`](docs/user.md) or if the `-s` flag is specified [`user.go`](docs/simple_user.md) or if the `-e` flag is specified [`user.go`](docs/empty_user.md)
+- For MySQL: [domain/repository/mysql/user_repository.go](docs/user_repository.md) or if the `-e` flag is specified [user_repository.go](docs/empty_user_repository.md)
 
 if there was no initialization, there will be automatic initialization for the selected database.
 

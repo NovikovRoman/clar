@@ -41,3 +41,10 @@ func ({{.EntitySymb}} *{{.Entity}}) GetID() int64 {
 	return {{.EntitySymb}}.ID
 }
 `
+
+const EmptyEntity = `package entity
+
+// {{.Entity}} entity structure.
+type {{.Entity}} struct {
+}
+`

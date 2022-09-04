@@ -42,7 +42,7 @@ func newEntity(name string) (ent *entity) {
 	return
 }
 
-func createEntity(module string, name string, dbType *DBType, simple bool) (err error) {
+func createEntity(module string, name string, dbType *DBType, empty bool, simple bool) (err error) {
 	if err = createDir(dirEntity); err != nil {
 		return
 	}
@@ -51,20 +51,20 @@ func createEntity(module string, name string, dbType *DBType, simple bool) (err 
 	}
 
 	ent := newEntity(name)
-	if err = initBasicEntityFiles(ent, dbType, simple); err != nil {
+	if err = initBasicEntityFiles(ent, dbType, empty, simple); err != nil {
 		return
 	}
 
 	switch dbType.code {
 	case MysqlCode:
-		return createMysqlEntityFiles(module, ent, dbType)
+		return createMysqlEntityFiles(module, ent, dbType, empty)
 	}
 
 	err = errors.New("Database type not supported.")
 	return
 }
 
-func initBasicEntityFiles(ent *entity, dbType *DBType, simple bool) (err error) {
+func initBasicEntityFiles(ent *entity, dbType *DBType, simple bool, empty bool) (err error) {
 	data := struct {
 		Module     string
 		Backtick   string
@@ -79,21 +79,26 @@ func initBasicEntityFiles(ent *entity, dbType *DBType, simple bool) (err error) 
 		EntityName: ent.name,
 	}
 
-	tmplName := "entity.normal"
-	if simple {
-		tmplName = "entity.simple"
+	tmplEntity := "entity.normal"
+	tmplRepository := "repository.interface"
+	if empty {
+		tmplEntity = "entity.empty"
+		tmplRepository = "repository.interface.empty"
+
+	} else if simple {
+		tmplEntity = "entity.simple"
 	}
 	filename := filepath.Join(dirEntity, ent.snakeName+".go")
-	if err = saveTemplate(filename, getTemplateByDBType(dbType, tmplName), data); err != nil {
+	if err = saveTemplate(filename, getTemplateByDBType(dbType, tmplEntity), data); err != nil {
 		return
 	}
 
 	filename = filepath.Join(dirRepository, ent.snakeName+"_repository_interface.go")
-	err = saveTemplate(filename, getTemplate("repository.interface"), data)
+	err = saveTemplate(filename, getTemplate(tmplRepository), data)
 	return
 }
 
-func createMysqlEntityFiles(module string, ent *entity, dbType *DBType) (err error) {
+func createMysqlEntityFiles(module string, ent *entity, dbType *DBType, empty bool) (err error) {
 	if _, err = os.Stat(filepath.Join(dirRepository, dbType.name)); os.IsNotExist(err) {
 		if err = createDir(filepath.Join(dirRepository, dbType.name)); err != nil {
 			return
@@ -120,7 +125,12 @@ func createMysqlEntityFiles(module string, ent *entity, dbType *DBType) (err err
 		EntityTable: ent.table,
 	}
 
+	tmpl := "repository.entity"
+	if empty {
+		tmpl = "repository.empty.entity"
+	}
+
 	filename := filepath.Join(dirRepository, dbType.name, ent.snakeName+"_repository.go")
-	err = saveTemplate(filename, getTemplateByDBType(dbType, "repository.entity"), data)
+	err = saveTemplate(filename, getTemplateByDBType(dbType, tmpl), data)
 	return
 }

@@ -46,6 +46,7 @@ func (c structCommand) Execute(_ []string) error {
 type entityCommand struct {
 	Name   string `long:"name" short:"n" description:"Entity name." required:"true"`
 	DBType string `long:"db" short:"d" description:"DB type." default:"mysql"`
+	Empty  bool   `long:"empty" short:"e" description:"Empty entity."`
 	Simple bool   `long:"simple" short:"s" description:"Simple entity."`
 }
 
@@ -54,7 +55,7 @@ func (c entityCommand) Execute(_ []string) (err error) {
 	if dbType, err = newDBType(opts.Entity.DBType); err != nil {
 		return
 	}
-	return createEntity(modulePath, opts.Entity.Name, dbType, opts.Entity.Simple)
+	return createEntity(modulePath, opts.Entity.Name, dbType, opts.Entity.Empty, opts.Entity.Simple)
 }
 
 type migrateCommand struct {

@@ -49,3 +49,27 @@ func (r *{{.EntityName}}Repository) Remove(ctx context.Context, {{.EntityName}} 
 	return remove(ctx, r.db, r.table, {{.EntityName}})
 }
 `
+
+const EmptyEntityRepository = `package mysql
+
+import (
+	"{{.Module}}/domain/repository"
+	"github.com/jmoiron/sqlx"
+)
+
+type {{.EntityName}}Repository struct {
+	table string
+	db    *sqlx.DB
+}
+
+func New{{.Entity}}Repository(db *sqlx.DB) repository.{{.Entity}}RepositoryInterface {
+	return &{{.EntityName}}Repository{
+		table: "{{.EntityTable}}",
+		db:    db,
+	}
+}
+
+func (r *{{.EntityName}}Repository) Table() string {
+	return r.table
+}
+`

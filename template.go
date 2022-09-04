@@ -21,6 +21,8 @@ func getTemplate(name string) string {
 
 	case "repository.interface":
 		return templates.RepositoryInterface
+	case "repository.interface.empty":
+		return templates.EmptyRepositoryInterface
 
 	default:
 		return ""
@@ -50,11 +52,15 @@ func getTemplateMysql(name string) string {
 
 	case "repository.utils":
 		return mysql.RepositoryUtils
+	case "repository.empty.entity":
+		return mysql.EmptyEntityRepository
 	case "repository.entity":
 		return mysql.EntityRepository
 
 	case "entity.normal":
 		return mysql.Entity
+	case "entity.empty":
+		return mysql.EmptyEntity
 	case "entity.simple":
 		return mysql.SimpleEntity
 

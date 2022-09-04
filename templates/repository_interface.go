@@ -16,3 +16,10 @@ type {{.Entity}}RepositoryInterface interface {
 	Remove(ctx context.Context, {{.EntityName}} *entity.{{.Entity}}) (err error)
 }
 `
+
+const EmptyRepositoryInterface = `package repository
+
+type {{.Entity}}RepositoryInterface interface {
+	Table() string
+}
+`
