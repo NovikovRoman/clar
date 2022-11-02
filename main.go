@@ -5,7 +5,6 @@ import (
 	"io/ioutil"
 	"os"
 	"regexp"
-	"strings"
 
 	"github.com/jessevdk/go-flags"
 )
@@ -59,7 +58,6 @@ func (c entityCommand) Execute(_ []string) (err error) {
 }
 
 type migrateCommand struct {
-	Path   string `long:"path" short:"p" description:"Directory path." default:"cmd/migrate"`
 	DBType string `long:"db" short:"d" description:"DB type." default:"mysql"`
 }
 
@@ -68,8 +66,7 @@ func (c migrateCommand) Execute(_ []string) (err error) {
 	if dbType, err = newDBType(opts.Migrate.DBType); err != nil {
 		return
 	}
-	opts.Migrate.Path = strings.TrimLeft(opts.Migrate.Path, "/")
-	return createMigrate(opts.Migrate.Path, dbType)
+	return createMigrate(dbType)
 }
 
 var opts struct {

@@ -12,7 +12,7 @@ import (
 	"time"
 	"unsafe"
 
-	"github.com/NovikovRoman/fsspru/domain/entity"
+	"{{.Module}}/domain/entity"
 	"github.com/jmoiron/sqlx"
 )
 

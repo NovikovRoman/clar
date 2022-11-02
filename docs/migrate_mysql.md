@@ -1,6 +1,7 @@
-package mysql
+# migrate.go
 
-const Migrate = `package mysql
+```go
+package mysql
 
 import (
 	"database/sql"
@@ -89,4 +90,26 @@ func MigrationDown(db *sql.DB, path string, step int, force bool) (err error) {
 	}
 	return
 }
-`
+```
+
+## Usage example
+```go
+…
+import (
+	…
+	migrate "[your_module]/domain/migrate/mysql"
+	…
+)
+…
+step, _ := strconv.Atoi(strings.TrimSpace(os.Getenv("MIGRATE_STEP")))
+force := strings.TrimSpace(os.Getenv("MIGRATE_FORCE")) != ""
+if os.Getenv("MIGRATE_STEP") == "down" {
+	err = migrate.MigrationDown(db.DB, migrations, step, force)
+} else {
+	err = migrate.MigrationUp(db.DB, migrations, step, force)
+}
+
+if err != nil {
+	log.Fatalf("migrate %s\n", err)
+}
+```

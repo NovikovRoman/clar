@@ -100,16 +100,18 @@ Will be created (example `clar i -nmyStruct`) [`domain/entity/my_struct.go`](doc
 Creating migration tools code.
 
 ```shell script
-clar m [-p dirpath|--path=dirpath] [-d dbtype|--db=dbtype]
+clar m [-d dbtype|--db=dbtype]
 ```
 or
 ```shell script
-clar migrate [-p dirpath|--path=dirpath] [-d dbtype|--db=dbtype]
+clar migrate [-d dbtype|--db=dbtype]
 ```
-- `dirpath` - for what type of database (default: `cmd/migrate`).
 - `dbtype` - for what type of database (default: `mysql`).
 
-This will create the directory `dirpath/dbtype`, with a migration tools and [documentation](docs/migrate_readme.md).
+Will be created (for MySQL):
+- [domain/migrate/mysql/migrate.go](docs/migrate_mysql.md)
+
+- [domain/migrate/mysql/migrations/….[up|down].sql](docs/migrations_mysql.md)
 
 ## Help
 

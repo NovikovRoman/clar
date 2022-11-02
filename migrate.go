@@ -4,13 +4,14 @@ import (
 	"path/filepath"
 )
 
-func createMigrate(path string, dbType *DBType) (err error) {
-	path = filepath.Join(path, dbType.name)
-	pathSql := filepath.Join(path, "/migrations")
+const dirMigrate = "domain/migrate"
 
-	if err = createDir(path); err != nil {
+func createMigrate(dbType *DBType) (err error) {
+	path := filepath.Join(dirMigrate, dbType.name)
+	/* if err = createDir(path); err != nil {
 		return
-	}
+	} */
+	pathSql := filepath.Join(path, "migrations")
 	if err = createDir(pathSql); err != nil {
 		return
 	}
@@ -21,11 +22,7 @@ func createMigrate(path string, dbType *DBType) (err error) {
 		Backtick: backtick,
 	}
 
-	if err = saveTemplate(path+"/README.md", getTemplateByDBType(dbType, "migrate.readme"), data); err != nil {
-		return
-	}
-
-	if err = saveTemplate(path+"/main.go", getTemplateByDBType(dbType, "migrate.main"), data); err != nil {
+	if err = saveTemplate(path+"/migrate.go", getTemplateByDBType(dbType, "migrate"), data); err != nil {
 		return
 	}
 

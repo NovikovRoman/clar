@@ -41,10 +41,8 @@ func getTemplateByDBType(dbType *DBType, name string) string {
 
 func getTemplateMysql(name string) string {
 	switch name {
-	case "migrate.readme":
-		return mysql.MigrateReadme
-	case "migrate.main":
-		return mysql.MigrateMain
+	case "migrate":
+		return mysql.Migrate
 	case "migrate.up":
 		return mysql.MigrateUp
 	case "migrate.down":
