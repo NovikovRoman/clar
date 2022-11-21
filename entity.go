@@ -42,7 +42,7 @@ func newEntity(name string) (ent *entity) {
 	return
 }
 
-func createEntity(module string, name string, dbType *DBType, empty bool, simple bool) (err error) {
+func createEntity(module string, name string, dbType *DBType, empty, simple bool) (err error) {
 	if err = createDir(dirEntity); err != nil {
 		return
 	}
@@ -64,7 +64,7 @@ func createEntity(module string, name string, dbType *DBType, empty bool, simple
 	return
 }
 
-func initBasicEntityFiles(ent *entity, dbType *DBType, empty bool, simple bool) (err error) {
+func initBasicEntityFiles(ent *entity, dbType *DBType, empty, simple bool) (err error) {
 	data := struct {
 		Module     string
 		Backtick   string
