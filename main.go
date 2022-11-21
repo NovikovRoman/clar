@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 	"regexp"
 
 	"github.com/jessevdk/go-flags"
@@ -97,7 +98,7 @@ func main() {
 		fmt.Println("Module not found in go.mod.")
 		os.Exit(1)
 	}
-	modulePath = string(m[1])
+	modulePath = filepath.Join(string(m[1]), "internal")
 
 	_, _ = flags.Parse(&opts)
 }

@@ -5,8 +5,8 @@ import (
 )
 
 const (
-	dirEntity     = "domain/entity"
-	dirRepository = "domain/repository"
+	dirEntity     = "internal/domain/entity"
+	dirRepository = "internal/domain/repository"
 )
 
 func initClar(module string, dbType *DBType) (err error) {

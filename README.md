@@ -37,9 +37,9 @@ clar init [-d dbtype|--db=dbtype]
 
 Will be created:
 
-- [domain/entity/entity_interface.go](docs/entity_interface.md)
+- [internal/domain/entity/entity_interface.go](docs/entity_interface.md)
 
-- For MySQL: [domain/repository/mysql/utils.go](docs/utils.md)
+- For MySQL: [internal/domain/repository/mysql/utils.go](docs/utils.md)
 
 ### Entity And Repository
 
@@ -59,9 +59,9 @@ clar entity -n name|--name=name [-d dbtype|--db=dbtype] [-s|--simple] or [-e|--e
 
 Will be created (example `clar i -nuser`):
 
-- [`domain/repository/user_repository_interface.go`](docs/user_repository_interface.md) or if the `-e` flag is specified [`user_repository_interface.go`](docs/empty_user_repository_interface.md)
-- [`domain/repository/entity/user.go`](docs/user.md) or if the `-s` flag is specified [`user.go`](docs/simple_user.md) or if the `-e` flag is specified [`user.go`](docs/empty_user.md)
-- For MySQL: [domain/repository/mysql/user_repository.go](docs/user_repository.md) or if the `-e` flag is specified [user_repository.go](docs/empty_user_repository.md)
+- [`internal/domain/repository/user_repository_interface.go`](docs/user_repository_interface.md) or if the `-e` flag is specified [`user_repository_interface.go`](docs/empty_user_repository_interface.md)
+- [`internal/domain/repository/entity/user.go`](docs/user.md) or if the `-s` flag is specified [`user.go`](docs/simple_user.md) or if the `-e` flag is specified [`user.go`](docs/empty_user.md)
+- For MySQL: [internal/domain/repository/mysql/user_repository.go](docs/user_repository.md) or if the `-e` flag is specified [user_repository.go](docs/empty_user_repository.md)
 
 if there was no initialization, there will be automatic initialization for the selected database.
 
@@ -78,7 +78,7 @@ clar array -n name|--name=name
 ```
 - `name` - struct name (required).
 
-Will be created (example `clar i -nmyArr`) [`domain/entity/my_arr.go`](docs/my_arr.md).
+Will be created (example `clar i -nmyArr`) [`internal/domain/entity/my_arr.go`](docs/my_arr.md).
 
 ### Structure For JSON Columns
 
@@ -93,7 +93,7 @@ clar struct -n name|--name=name
 ```
 - `name` - struct name (required).
 
-Will be created (example `clar i -nmyStruct`) [`domain/entity/my_struct.go`](docs/my_struct.md).
+Will be created (example `clar i -nmyStruct`) [`internal/domain/entity/my_struct.go`](docs/my_struct.md).
 
 ### Migration Tools
 
@@ -109,9 +109,9 @@ clar migrate [-d dbtype|--db=dbtype]
 - `dbtype` - for what type of database (default: `mysql`).
 
 Will be created (for MySQL):
-- [domain/migrate/mysql/migrate.go](docs/migrate_mysql.md)
+- [internal/domain/migrate/mysql/migrate.go](docs/migrate_mysql.md)
 
-- [domain/migrate/mysql/migrations/….[up|down].sql](docs/migrations_mysql.md)
+- [internal/domain/migrate/mysql/migrations/….[up|down].sql](docs/migrations_mysql.md)
 
 ## Help
 
