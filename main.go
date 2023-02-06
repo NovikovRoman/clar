@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -88,7 +87,7 @@ func main() {
 	}
 
 	var b []byte
-	if b, err = ioutil.ReadFile("go.mod"); err != nil {
+	if b, err = os.ReadFile("go.mod"); err != nil {
 		fmt.Println("go.mod cannot be read.")
 		os.Exit(1)
 	}
