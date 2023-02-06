@@ -4,7 +4,7 @@ import (
 	"path/filepath"
 )
 
-const dirMigrate = "domain/migrate"
+const dirMigrate = "internal/domain/migrate"
 
 func createMigrate(dbType *DBType) (err error) {
 	path := filepath.Join(dirMigrate, dbType.name)
