@@ -1,6 +1,6 @@
-go 1.18
-
 module github.com/NovikovRoman/clar
+
+go 1.19
 
 require github.com/stretchr/testify v1.8.0
 
