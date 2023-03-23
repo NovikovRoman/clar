@@ -6,7 +6,6 @@ import (
 	"bytes"
 	"database/sql/driver"
 	"encoding/json"
-	"errors"
 	"fmt"
 )
 
@@ -24,7 +23,7 @@ func ({{.StructSymb}} *{{.Struct}}) String() string {
 func ({{.StructSymb}} *{{.Struct}}) Scan(val interface{}) (err error) {
 	switch v := val.(type) {
 	case []byte:
-		if bytes.Compare(v, []byte("[]")) == 0 {
+		if bytes.Equal(v, []byte("[]")) {
 			return
 		}
 		err = json.Unmarshal(v, {{.StructSymb}})
@@ -38,7 +37,7 @@ func ({{.StructSymb}} *{{.Struct}}) Scan(val interface{}) (err error) {
 		return
 
 	default:
-		return errors.New(fmt.Sprintf("Unsupported type: %T", v))
+		return fmt.Errorf("Unsupported type: %T", v)
 	}
 }
 
