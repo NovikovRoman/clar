@@ -15,37 +15,35 @@ type {{.Struct}} struct {
 	Field3 bool
 }
 
-func ({{.StructSymb}} *{{.Struct}}) String() string {
+func ({{.StructSymb}} {{.Struct}}) String() string {
 	b, _ := json.Marshal({{.StructSymb}})
 	return string(b)
 }
 
-func ({{.StructSymb}} *{{.Struct}}) Scan(val interface{}) (err error) {
+func ({{.StructSymb}} *{{.Struct}}) Scan(val interface{}) error {
 	switch v := val.(type) {
 	case []byte:
-		if bytes.Equal(v, []byte("[]")) {
-			return
+		if bytes.Equal(v, []byte("[]")) || bytes.Equal(v, []byte("{}")) {
+			return nil
 		}
-		err = json.Unmarshal(v, {{.StructSymb}})
-		return
+		return json.Unmarshal(v, {{.StructSymb}})
 
 	case string:
-		if v == "[]" {
-			return
+		if v == "[]" || v == "{}" {
+			return nil
 		}
-		err = json.Unmarshal([]byte(v), {{.StructSymb}})
-		return
+		return json.Unmarshal([]byte(v), {{.StructSymb}})
 
 	default:
 		return fmt.Errorf("Unsupported type: %T", v)
 	}
 }
 
-func ({{.StructSymb}} *{{.Struct}}) Value() (driver.Value, error) {
+func ({{.StructSymb}} {{.Struct}}) Value() (driver.Value, error) {
 	return json.Marshal({{.StructSymb}})
 }
 
-func ({{.StructSymb}} *{{.Struct}}) ConvertValue() (string, error) {
+func ({{.StructSymb}} {{.Struct}}) ConvertValue() (string, error) {
 	b, err := json.Marshal({{.StructSymb}})
 	if err != nil {
 		return "[]", err
