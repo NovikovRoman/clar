@@ -37,7 +37,7 @@ clar init [-d dbtype|--db=dbtype]
 
 Will be created:
 
-- [internal/domain/entity/entity_interface.go](docs/entity_interface.md)
+- [internal/domain/entity/base_entity.go](docs/base_entity.md)
 
 - For MySQL: [internal/domain/repository/mysql/utils.go](docs/utils.md)
 

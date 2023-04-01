@@ -17,7 +17,7 @@ func initClar(module string, dbType *DBType) (err error) {
 		return
 	}
 
-	filename := filepath.Join(dirEntity, "entity.go")
+	filename := filepath.Join(dirEntity, "base_entity.go")
 	if err = saveTemplate(filename, getTemplate("interface"), nil); err != nil {
 		return
 	}

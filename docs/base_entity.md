@@ -1,4 +1,4 @@
-# entity_interface.go
+# base_entity.go
 
 ```go
 package entity
