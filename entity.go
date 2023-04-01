@@ -88,13 +88,15 @@ func initBasicEntityFiles(ent *entity, dbType *DBType, empty, simple bool) (err 
 	} else if simple {
 		tmplEntity = "entity.simple"
 	}
-	filename := filepath.Join(dirEntity, ent.snakeName+".go")
-	if err = saveTemplate(filename, getTemplateByDBType(dbType, tmplEntity), data); err != nil {
+
+	entitityFilename := ent.snakeName + ".go"
+	filePath := filepath.Join(dirEntity, entitityFilename)
+	if err = saveTemplate(filePath, getTemplateByDBType(dbType, tmplEntity), data); err != nil {
 		return
 	}
 
-	filename = filepath.Join(dirRepository, ent.snakeName+"_repository_interface.go")
-	err = saveTemplate(filename, getTemplate(tmplRepository), data)
+	filePath = filepath.Join(dirRepository, entitityFilename)
+	err = saveTemplate(filePath, getTemplate(tmplRepository), data)
 	return
 }
 
@@ -130,7 +132,7 @@ func createMysqlEntityFiles(module string, ent *entity, dbType *DBType, empty bo
 		tmpl = "repository.empty.entity"
 	}
 
-	filename := filepath.Join(dirRepository, dbType.name, ent.snakeName+"_repository.go")
-	err = saveTemplate(filename, getTemplateByDBType(dbType, tmpl), data)
+	filePath := filepath.Join(dirRepository, dbType.name, ent.snakeName+".go")
+	err = saveTemplate(filePath, getTemplateByDBType(dbType, tmpl), data)
 	return
 }

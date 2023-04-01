@@ -1,6 +1,6 @@
 package templates
 
-const RepositoryInterface = `package repository
+const Repository = `package repository
 
 import (
 	"context"
@@ -8,7 +8,7 @@ import (
 	"{{.Module}}/domain/entity"
 )
 
-type {{.Entity}}RepositoryInterface interface {
+type {{.Entity}}Repository interface {
 	Table() string
 	GetByID(ctx context.Context, id int64) ({{.EntityName}} *entity.{{.Entity}}, err error)
 	Save(ctx context.Context, {{.EntityName}} *entity.{{.Entity}}) (err error)
@@ -17,9 +17,9 @@ type {{.Entity}}RepositoryInterface interface {
 }
 `
 
-const EmptyRepositoryInterface = `package repository
+const EmptyRepository = `package repository
 
-type {{.Entity}}RepositoryInterface interface {
+type {{.Entity}}Repository interface {
 	Table() string
 }
 `

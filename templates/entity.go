@@ -1,15 +1,15 @@
 package templates
 
-const EntityInterface = `package entity
+const BaseEntity = `package entity
 
 import "time"
 
-type SimpleEntityInterface interface {
+type SimpleBaseEntity interface {
 	GetID() int64
 }
 
-type EntityInterface interface {
-	SimpleEntityInterface
+type BaseEntity interface {
+	SimpleBaseEntity
 
 	GetCreatedAt() time.Time
 	GetUpdatedAt() time.Time

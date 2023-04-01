@@ -20,21 +20,16 @@ import (
 //
 // New record - creates in a DB, existing - updates in a DB. If the entry:
 //
-// - entity.SimpleEntityInterface regular update of a record in the database,
+// - entity.SimpleEntity regular update of a record in the database,
 //
-// - entity.EntityInterface regular update of the record in the database
+// - entity.Entity regular update of the record in the database
 // 		and the auto-update of the date in the UpdatedAt field.
-func save(
-	ctx context.Context,
-	db *sqlx.DB,
-	table string,
-	ent entity.SimpleEntityInterface,
-) (err error) {
+func save(ctx context.Context, db *sqlx.DB, table string, ent entity.SimpleEntity) (err error) {
 	if ent.GetID() == 0 {
 		return create(ctx, db, table, ent)
 	}
 
-	if v, ok := ent.(entity.EntityInterface); ok {
+	if v, ok := ent.(entity.Entity); ok {
 		setUpdatedAt(v, time.Now())
 	}
 
@@ -56,22 +51,17 @@ func save(
 //
 // If the entry:
 //
-// - entity.SimpleEntityInterface the usual creation of a record in the database,
+// - entity.SimpleBaseEntity the usual creation of a record in the database,
 //
-// - entity.EntityInterface the usual creation of a record in the database,
+// - entity.BaseEntity the usual creation of a record in the database,
 //		setting CreatedAt to the current time, UpdatedAt if not set - to the current time,
 //  	DeletedAt if not set - nil.
-func create(
-	ctx context.Context,
-	db *sqlx.DB,
-	table string,
-	ent entity.SimpleEntityInterface,
-) (err error) {
+func create(ctx context.Context, db *sqlx.DB, table string, ent entity.SimpleBaseEntity) (err error) {
 	if ent.GetID() > 0 {
 		return save(ctx, db, table, ent)
 	}
 
-	if vEnt, ok := ent.(entity.EntityInterface); ok {
+	if vEnt, ok := ent.(entity.BaseEntity); ok {
 		setCreatedAt(vEnt, time.Now())
 		if vEnt.GetUpdatedAt().IsZero() {
 			setUpdatedAt(vEnt, time.Now())
@@ -106,7 +96,7 @@ func create(
 }
 
 // update updates a record in the database. Alias save.
-func update(ctx context.Context, db *sqlx.DB, table string, ent entity.SimpleEntityInterface) (err error) {
+func update(ctx context.Context, db *sqlx.DB, table string, ent entity.SimpleBaseEntity) (err error) {
 	if ent.GetID() == 0 {
 		err = errors.New("This is a new entry. ")
 		return
@@ -117,21 +107,16 @@ func update(ctx context.Context, db *sqlx.DB, table string, ent entity.SimpleEnt
 
 // remove deleting an entry from the database or marking it as a deleted entry in cases where entity:
 //
-// - entity.SimpleEntityInterface - removes a record from the database,
+// - entity.SimpleBaseEntity - removes a record from the database,
 //
-// - entity.EntityInterface - marks the entry in the database as deleted.
-func remove(
-	ctx context.Context,
-	db *sqlx.DB,
-	table string,
-	ent entity.SimpleEntityInterface,
-) (err error) {
+// - entity.BaseEntity - marks the entry in the database as deleted.
+func remove(ctx context.Context, db *sqlx.DB, table string, ent entity.SimpleBaseEntity) (err error) {
 	if ent.GetID() == 0 {
 		return
 	}
 
 	var sql string
-	if _, ok := ent.(entity.EntityInterface); ok {
+	if _, ok := ent.(entity.BaseEntity); ok {
 		sql = "UPDATE {{.Backtick}}" + table + "{{.Backtick}} SET {{.Backtick}}deleted_at{{.Backtick}}=null WHERE {{.Backtick}}id{{.Backtick}}=?"
 	} else {
 		sql = "DELETE FROM {{.Backtick}}" + table + "{{.Backtick}} WHERE {{.Backtick}}id{{.Backtick}}=?"
@@ -145,7 +130,7 @@ func remove(
 	return
 }
 
-func setID(ent entity.SimpleEntityInterface, id int64) {
+func setID(ent entity.SimpleBaseEntity, id int64) {
 	v := reflect.ValueOf(ent)
 	if v.Kind() == reflect.Ptr {
 		v = v.Elem()
@@ -153,7 +138,7 @@ func setID(ent entity.SimpleEntityInterface, id int64) {
 	v.FieldByName("ID").SetInt(id)
 }
 
-func setCreatedAt(ent entity.EntityInterface, t time.Time) {
+func setCreatedAt(ent entity.BaseEntity, t time.Time) {
 	v := reflect.ValueOf(ent)
 	if v.Kind() == reflect.Ptr {
 		v = v.Elem()
@@ -161,7 +146,7 @@ func setCreatedAt(ent entity.EntityInterface, t time.Time) {
 	v.FieldByName("CreatedAt").Set(reflect.ValueOf(t))
 }
 
-func setUpdatedAt(ent entity.EntityInterface, t time.Time) {
+func setUpdatedAt(ent entity.BaseEntity, t time.Time) {
 	v := reflect.ValueOf(ent)
 	if v.Kind() == reflect.Ptr {
 		v = v.Elem()
@@ -169,7 +154,7 @@ func setUpdatedAt(ent entity.EntityInterface, t time.Time) {
 	v.FieldByName("UpdatedAt").Set(reflect.ValueOf(t))
 }
 
-func setDeletedAt(ent entity.EntityInterface, t *time.Time) {
+func setDeletedAt(ent entity.BaseEntity, t *time.Time) {
 	v := reflect.ValueOf(ent)
 	if v.Kind() == reflect.Ptr {
 		v = v.Elem()

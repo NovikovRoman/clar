@@ -5,12 +5,12 @@ package entity
 
 import "time"
 
-type SimpleEntityInterface interface {
+type SimpleBaseEntity interface {
 	GetID() int64
 }
 
-type EntityInterface interface {
-	SimpleEntityInterface
+type BaseEntity interface {
+	SimpleEntity
 
 	GetCreatedAt() time.Time
 	GetUpdatedAt() time.Time

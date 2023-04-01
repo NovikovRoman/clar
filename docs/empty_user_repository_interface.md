@@ -3,7 +3,7 @@
 ```go
 package repository
 
-type UserRepositoryInterface interface {
+type UserRepository interface {
 	Table() string
 }
 ```

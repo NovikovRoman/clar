@@ -13,7 +13,7 @@ type userRepository struct {
 	db    *sqlx.DB
 }
 
-func NewUserRepository(db *sqlx.DB) repository.UserRepositoryInterface {
+func NewUserRepository(db *sqlx.DB) repository.UserRepository {
 	return &userRepository{
 		table: "users",
 		db:    db,

@@ -9,7 +9,7 @@ import (
 	"github.com/NovikovRoman/clar/domain/entity"
 )
 
-type UserRepositoryInterface interface {
+type UserRepository interface {
 	Table() string
 	GetByID(ctx context.Context, id int64) (user *entity.User, err error)
 	Save(ctx context.Context, user *entity.User) (err error)

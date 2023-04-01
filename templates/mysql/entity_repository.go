@@ -16,7 +16,7 @@ type {{.EntityName}}Repository struct {
 	db    *sqlx.DB
 }
 
-func New{{.Entity}}Repository(db *sqlx.DB) repository.{{.Entity}}RepositoryInterface {
+func New{{.Entity}}Repository(db *sqlx.DB) repository.{{.Entity}}Repository {
 	return &{{.EntityName}}Repository{
 		table: "{{.EntityTable}}",
 		db:    db,
@@ -62,7 +62,7 @@ type {{.EntityName}}Repository struct {
 	db    *sqlx.DB
 }
 
-func New{{.Entity}}Repository(db *sqlx.DB) repository.{{.Entity}}RepositoryInterface {
+func New{{.Entity}}Repository(db *sqlx.DB) repository.{{.Entity}}Repository {
 	return &{{.EntityName}}Repository{
 		table: "{{.EntityTable}}",
 		db:    db,

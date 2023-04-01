@@ -12,7 +12,7 @@ import (
 func getTemplate(name string) string {
 	switch name {
 	case "interface":
-		return templates.EntityInterface
+		return templates.BaseEntity
 
 	case "json_struct":
 		return templates.JsonStruct
@@ -20,9 +20,9 @@ func getTemplate(name string) string {
 		return templates.StringArray
 
 	case "repository.interface":
-		return templates.RepositoryInterface
+		return templates.Repository
 	case "repository.interface.empty":
-		return templates.EmptyRepositoryInterface
+		return templates.EmptyRepository
 
 	default:
 		return ""
