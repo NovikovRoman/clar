@@ -4,13 +4,13 @@ import (
 	"path/filepath"
 )
 
-const dirMigrate = "internal/domain/migrate"
+func createMigrate(dbType *DBType, internal bool) (err error) {
+	path := ""
+	if internal {
+		path = dirInternal
+	}
 
-func createMigrate(dbType *DBType) (err error) {
-	path := filepath.Join(dirMigrate, dbType.name)
-	/* if err = createDir(path); err != nil {
-		return
-	} */
+	path = filepath.Join(path, dirMigrate, dbType.name)
 	pathSql := filepath.Join(path, "migrations")
 	if err = createDir(pathSql); err != nil {
 		return

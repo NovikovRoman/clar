@@ -4,22 +4,24 @@ import (
 	"path/filepath"
 )
 
-const (
-	dirEntity     = "internal/domain/entity"
-	dirRepository = "internal/domain/repository"
-)
-
-func initClar(module string, dbType *DBType) (err error) {
-	if err = createDir(dirEntity); err != nil {
+func initClar(dbType *DBType, internal bool) (err error) {
+	dirE := getPathLocation(dirEntity, internal)
+	if err = createDir(dirE); err != nil {
 		return
 	}
-	if err = createDir(filepath.Join(dirRepository, dbType.name)); err != nil {
+	dirR := getPathLocation(dirRepository, internal)
+	if err = createDir(filepath.Join(dirR, dbType.name)); err != nil {
 		return
 	}
 
-	filename := filepath.Join(dirEntity, "base_entity.go")
+	filename := filepath.Join(dirE, "base_entity.go")
 	if err = saveTemplate(filename, getTemplate("interface"), nil); err != nil {
 		return
+	}
+
+	mPath := modulePath
+	if internal {
+		mPath = filepath.Join(mPath, "internal")
 	}
 
 	data := struct {
@@ -27,9 +29,9 @@ func initClar(module string, dbType *DBType) (err error) {
 		Module   string
 	}{
 		Backtick: backtick,
-		Module:   module,
+		Module:   mPath,
 	}
-	filename = filepath.Join(dirRepository, dbType.name, "utils.go")
+	filename = filepath.Join(dirR, dbType.name, "utils.go")
 	err = saveTemplate(filename, getTemplateByDBType(dbType, "repository.utils"), data)
 	return
 }

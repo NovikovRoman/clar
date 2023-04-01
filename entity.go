@@ -42,29 +42,26 @@ func newEntity(name string) (ent *entity) {
 	return
 }
 
-func createEntity(module string, name string, dbType *DBType, empty, simple bool) (err error) {
-	if err = createDir(dirEntity); err != nil {
-		return
-	}
-	if err = createDir(dirRepository); err != nil {
-		return
-	}
-
+func createEntity(name string, dbType *DBType, empty, simple, internal bool) (err error) {
 	ent := newEntity(name)
-	if err = initBasicEntityFiles(ent, dbType, empty, simple); err != nil {
+	if err = initBasicEntityFiles(ent, dbType, empty, simple, internal); err != nil {
 		return
 	}
 
 	switch dbType.code {
 	case MysqlCode:
-		return createMysqlEntityFiles(module, ent, dbType, empty)
+		return createMysqlEntityFiles(ent, dbType, empty, internal)
 	}
 
 	err = errors.New("Database type not supported.")
 	return
 }
 
-func initBasicEntityFiles(ent *entity, dbType *DBType, empty, simple bool) (err error) {
+func initBasicEntityFiles(ent *entity, dbType *DBType, empty, simple, internal bool) (err error) {
+	mPath := modulePath
+	if internal {
+		mPath = filepath.Join(modulePath, "internal")
+	}
 	data := struct {
 		Module     string
 		Backtick   string
@@ -72,7 +69,7 @@ func initBasicEntityFiles(ent *entity, dbType *DBType, empty, simple bool) (err 
 		EntitySymb string
 		EntityName string
 	}{
-		Module:     modulePath,
+		Module:     mPath,
 		Backtick:   backtick,
 		Entity:     cases.Title(language.English, cases.NoLower).String(ent.name),
 		EntitySymb: ent.symb,
@@ -90,27 +87,41 @@ func initBasicEntityFiles(ent *entity, dbType *DBType, empty, simple bool) (err 
 	}
 
 	entitityFilename := ent.snakeName + ".go"
-	filePath := filepath.Join(dirEntity, entitityFilename)
+
+	dirE := getPathLocation(dirEntity, internal)
+	if err = createDir(dirE); err != nil {
+		return
+	}
+	filePath := filepath.Join(dirE, entitityFilename)
 	if err = saveTemplate(filePath, getTemplateByDBType(dbType, tmplEntity), data); err != nil {
 		return
 	}
 
-	filePath = filepath.Join(dirRepository, entitityFilename)
+	dirR := getPathLocation(dirRepository, internal)
+	if err = createDir(dirR); err != nil {
+		return
+	}
+	filePath = filepath.Join(dirR, entitityFilename)
 	err = saveTemplate(filePath, getTemplate(tmplRepository), data)
 	return
 }
 
-func createMysqlEntityFiles(module string, ent *entity, dbType *DBType, empty bool) (err error) {
-	if _, err = os.Stat(filepath.Join(dirRepository, dbType.name)); os.IsNotExist(err) {
-		if err = createDir(filepath.Join(dirRepository, dbType.name)); err != nil {
+func createMysqlEntityFiles(ent *entity, dbType *DBType, empty, internal bool) (err error) {
+	dirDbType := filepath.Join(getPathLocation(dirRepository, internal), dbType.name)
+	if _, err = os.Stat(dirDbType); os.IsNotExist(err) {
+		if err = createDir(dirDbType); err != nil {
 			return
 		}
 
-		if err = initClar(module, dbType); err != nil {
+		if err = initClar(dbType, internal); err != nil {
 			return
 		}
 	}
 
+	mPath := modulePath
+	if internal {
+		mPath = filepath.Join(modulePath, "internal")
+	}
 	data := struct {
 		Module      string
 		Backtick    string
@@ -119,7 +130,7 @@ func createMysqlEntityFiles(module string, ent *entity, dbType *DBType, empty bo
 		EntityName  string
 		EntityTable string
 	}{
-		Module:      modulePath,
+		Module:      mPath,
 		Backtick:    backtick,
 		Table:       ent.table,
 		Entity:      ent.structName,
@@ -132,7 +143,7 @@ func createMysqlEntityFiles(module string, ent *entity, dbType *DBType, empty bo
 		tmpl = "repository.empty.entity"
 	}
 
-	filePath := filepath.Join(dirRepository, dbType.name, ent.snakeName+".go")
+	filePath := filepath.Join(dirDbType, ent.snakeName+".go")
 	err = saveTemplate(filePath, getTemplateByDBType(dbType, tmpl), data)
 	return
 }

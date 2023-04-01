@@ -8,8 +8,9 @@ import (
 	"golang.org/x/text/language"
 )
 
-func createJsonArray(name string) (err error) {
-	if err = createDir(dirEntity); err != nil {
+func createJsonArray(name string, internal bool) (err error) {
+	dirE := getPathLocation(dirEntity, internal)
+	if err = createDir(dirE); err != nil {
 		return
 	}
 
@@ -21,7 +22,7 @@ func createJsonArray(name string) (err error) {
 		StructSymb: strings.ToLower(string([]rune(name)[0])),
 	}
 
-	filename := filepath.Join(dirEntity, toSnake(name)+".go")
+	filename := filepath.Join(dirE, toSnake(name)+".go")
 	err = saveTemplate(filename, getTemplate("json_array"), data)
 	return
 }

@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"os"
-	"path/filepath"
 	"regexp"
 
 	"github.com/jessevdk/go-flags"
@@ -15,7 +14,8 @@ const (
 )
 
 type initCommand struct {
-	DBType string `long:"db" short:"d" description:"DB type." default:"mysql"`
+	DBType   string `long:"db" short:"d" description:"DB type." default:"mysql"`
+	Internal bool   `long:"internal" short:"i" description:"In internal directory"`
 }
 
 func (c initCommand) Execute(_ []string) (err error) {
@@ -23,30 +23,33 @@ func (c initCommand) Execute(_ []string) (err error) {
 	if dbType, err = newDBType(opts.Init.DBType); err != nil {
 		return
 	}
-	return initClar(modulePath, dbType)
+	return initClar(dbType, opts.Init.Internal)
 }
 
 type arrayCommand struct {
-	Name string `long:"name" short:"n" description:"Structure name." required:"true"`
+	Name     string `long:"name" short:"n" description:"Structure name." required:"true"`
+	Internal bool   `long:"internal" short:"i" description:"In internal directory"`
 }
 
 func (c arrayCommand) Execute(_ []string) error {
-	return createJsonArray(opts.Array.Name)
+	return createJsonArray(opts.Array.Name, opts.Array.Internal)
 }
 
 type structCommand struct {
-	Name string `long:"name" short:"n" description:"Structure name." required:"true"`
+	Name     string `long:"name" short:"n" description:"Structure name." required:"true"`
+	Internal bool   `long:"internal" short:"i" description:"In internal directory"`
 }
 
 func (c structCommand) Execute(_ []string) error {
-	return createJsonStruct(opts.Struct.Name)
+	return createJsonStruct(opts.Struct.Name, opts.Struct.Internal)
 }
 
 type entityCommand struct {
-	Name   string `long:"name" short:"n" description:"Entity name." required:"true"`
-	DBType string `long:"db" short:"d" description:"DB type." default:"mysql"`
-	Empty  bool   `long:"empty" short:"e" description:"Empty entity."`
-	Simple bool   `long:"simple" short:"s" description:"Simple entity."`
+	Name     string `long:"name" short:"n" description:"Entity name." required:"true"`
+	DBType   string `long:"db" short:"d" description:"DB type." default:"mysql"`
+	Empty    bool   `long:"empty" short:"e" description:"Empty entity."`
+	Simple   bool   `long:"simple" short:"s" description:"Simple entity."`
+	Internal bool   `long:"internal" short:"i" description:"In internal directory"`
 }
 
 func (c entityCommand) Execute(_ []string) (err error) {
@@ -54,11 +57,13 @@ func (c entityCommand) Execute(_ []string) (err error) {
 	if dbType, err = newDBType(opts.Entity.DBType); err != nil {
 		return
 	}
-	return createEntity(modulePath, opts.Entity.Name, dbType, opts.Entity.Empty, opts.Entity.Simple)
+	return createEntity(opts.Entity.Name, dbType,
+		opts.Entity.Empty, opts.Entity.Simple, opts.Entity.Internal)
 }
 
 type migrateCommand struct {
-	DBType string `long:"db" short:"d" description:"DB type." default:"mysql"`
+	DBType   string `long:"db" short:"d" description:"DB type." default:"mysql"`
+	Internal bool   `long:"internal" short:"i" description:"In internal directory"`
 }
 
 func (c migrateCommand) Execute(_ []string) (err error) {
@@ -66,7 +71,7 @@ func (c migrateCommand) Execute(_ []string) (err error) {
 	if dbType, err = newDBType(opts.Migrate.DBType); err != nil {
 		return
 	}
-	return createMigrate(dbType)
+	return createMigrate(dbType, opts.Migrate.Internal)
 }
 
 var opts struct {
@@ -97,7 +102,7 @@ func main() {
 		fmt.Println("Module not found in go.mod.")
 		os.Exit(1)
 	}
-	modulePath = filepath.Join(string(m[1]), "internal")
+	modulePath = string(m[1])
 
 	_, _ = flags.Parse(&opts)
 }
