@@ -24,12 +24,12 @@ import (
 //
 // - entity.Entity regular update of the record in the database
 // 		and the auto-update of the date in the UpdatedAt field.
-func save(ctx context.Context, db *sqlx.DB, table string, ent entity.SimpleEntity) (err error) {
+func save(ctx context.Context, db *sqlx.DB, table string, ent entity.SimpleBaseEntity) (err error) {
 	if ent.GetID() == 0 {
 		return create(ctx, db, table, ent)
 	}
 
-	if v, ok := ent.(entity.Entity); ok {
+	if v, ok := ent.(entity.BaseEntity); ok {
 		setUpdatedAt(v, time.Now())
 	}
 
