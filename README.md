@@ -61,9 +61,9 @@ clar entity -n name|--name=name [-d dbtype|--db=dbtype] [-i|--internal] [-s|--si
 
 Will be created (example `clar i -nuser`):
 
-- [`internal/domain/repository/user_repository.go`](docs/user_repository_interface.md) or if the `-e` flag is specified [`user_repository.go`](docs/empty_user_repository_interface.md)
-- [`internal/domain/repository/entity/user.go`](docs/user.md) or if the `-s` flag is specified [`user.go`](docs/simple_user.md) or if the `-e` flag is specified [`user.go`](docs/empty_user.md)
-- For MySQL: [internal/domain/repository/mysql/user.go](docs/user_repository.md) or if the `-e` flag is specified [user.go](docs/empty_user_repository.md)
+- [`domain/repository/user_repository.go`](docs/user_repository_interface.md) or if the `-e` flag is specified [`user_repository.go`](docs/empty_user_repository_interface.md)
+- [`domain/repository/entity/user.go`](docs/user.md) or if the `-s` flag is specified [`user.go`](docs/simple_user.md) or if the `-e` flag is specified [`user.go`](docs/empty_user.md)
+- For MySQL: [domain/repository/mysql/user.go](docs/user_repository.md) or if the `-e` flag is specified [user.go](docs/empty_user_repository.md)
 
 if there was no initialization, there will be automatic initialization for the selected database.
 
@@ -81,7 +81,7 @@ clar array -n name|--name=name [-i|--internal]
 - `name` - struct name (required).
 - `-i`, `--internal` - put the code in the `internal` directory.
 
-Will be created (example `clar i -nmyArr`) [`internal/domain/entity/my_arr.go`](docs/my_arr.md).
+Will be created (example `clar i -nmyArr`) [`domain/entity/my_arr.go`](docs/my_arr.md).
 
 ### Structure For JSON Columns
 
@@ -97,7 +97,7 @@ clar struct -n name|--name=name [-i|--internal]
 - `name` - struct name (required).
 - `-i`, `--internal` - put the code in the `internal` directory.
 
-Will be created (example `clar i -nmyStruct`) [`internal/domain/entity/my_struct.go`](docs/my_struct.md).
+Will be created (example `clar i -nmyStruct`) [`domain/entity/my_struct.go`](docs/my_struct.md).
 
 ### Migration Tools
 
@@ -114,9 +114,9 @@ clar migrate [-d dbtype|--db=dbtype] [-i|--internal]
 - `-i`, `--internal` - put the code in the `internal` directory.
 
 Will be created (for MySQL):
-- [internal/domain/migrate/mysql/migrate.go](docs/migrate_mysql.md)
+- [migrations/mysql/migrate.go](docs/migrate_mysql.md)
 
-- [internal/domain/migrate/mysql/migrations/….[up|down].sql](docs/migrations_mysql.md)
+- [migrations/mysql/migrations/….[up|down].sql](docs/migrations_mysql.md)
 
 ## Help
 

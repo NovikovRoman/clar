@@ -9,7 +9,7 @@ const (
 	dirInternal   = "internal"
 	dirEntity     = "domain/entity"
 	dirRepository = "domain/repository"
-	dirMigrate    = "domain/migrate"
+	dirMigrate    = "migrations"
 )
 
 // createDir creates a directory if it does not exist.
