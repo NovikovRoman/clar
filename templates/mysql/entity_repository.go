@@ -37,6 +37,17 @@ func (r *{{.EntityName}}Repository) GetByID(ctx context.Context, id int64) ({{.E
 	return
 }
 
+// SaveMultiple saves multiple entries to the database. Adds new, updates existing entities.
+// Entities must be of the same type.
+// [!] Use with caution. For new entries, does not return an ID.
+func (r *{{.EntityName}}Repository) SaveMultiple(ctx context.Context, {{.EntityName}} ...*entity.{{.Entity}}) error {
+	items := make([]entity.SimpleBaseEntity, len({{.EntityName}}))
+	for i, item := range {{.EntityName}} {
+		items[i] = item
+	}
+	return saveMultiple(ctx, r.db, r.table, items...)
+}
+
 func (r *{{.EntityName}}Repository) Save(ctx context.Context, {{.EntityName}} *entity.{{.Entity}}) error {
 	return save(ctx, r.db, r.table, {{.EntityName}})
 }
