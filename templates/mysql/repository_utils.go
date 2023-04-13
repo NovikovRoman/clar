@@ -54,7 +54,7 @@ func saveMultiple(ctx context.Context, db *sqlx.DB, table string, ents ...entity
 		if i > 0 {
 			query += ","
 		}
-		query += field + "=t." + field
+		query += "{{.Backtick}}" + field + "{{.Backtick}}=t." + field
 	}
 
 	if ctx == nil {
@@ -68,7 +68,7 @@ func saveMultiple(ctx context.Context, db *sqlx.DB, table string, ents ...entity
 
 func insertIgnoreDuplicates(ctx context.Context, db *sqlx.DB, table string, ents ...entity.SimpleBaseEntity) (err error) {
 	query, fields, args := partQueryMultiInsert(table, ents...)
-	query += "t." + fields[0] + "=" + fields[0]
+	query += "{{.Backtick}}" + fields[0] + "{{.Backtick}}=t." + fields[0]
 	if ctx == nil {
 		_, err = db.Exec(query, args...)
 
