@@ -48,7 +48,43 @@ func save(ctx context.Context, db *sqlx.DB, table string, ent entity.SimpleBaseE
 // Entities must be of the same type.
 // [!] Use with caution. For new entries, does not return an ID.
 func saveMultiple(ctx context.Context, db *sqlx.DB, table string, ents ...entity.SimpleBaseEntity) (err error) {
-	fields := tableFields(ents[0])
+	query, fields, args := partQueryMultiInsert(table, ents...)
+
+	for i, field := range fields {
+		if i > 0 {
+			query += ","
+		}
+		query += field + "=t." + field
+	}
+
+	if ctx == nil {
+		_, err = db.Exec(query, args...)
+
+	} else {
+		_, err = db.ExecContext(ctx, query, args...)
+	}
+	return
+}
+
+func insertIgnoreDuplicates(ctx context.Context, db *sqlx.DB, table string, ents ...entity.SimpleBaseEntity) (err error) {
+	query, fields, args := partQueryMultiInsert(table, ents...)
+	query += "t." + fields[0] + "=" + fields[0]
+	if ctx == nil {
+		_, err = db.Exec(query, args...)
+
+	} else {
+		_, err = db.ExecContext(ctx, query, args...)
+	}
+	return
+}
+
+// partQueryMultiInsert inserts multiple records into the database.
+// There is a space at the end of the line.
+//
+// Example:
+// INSERT INTO table({{.Backtick}}id{{.Backtick}},{{.Backtick}}field1{{.Backtick}},{{.Backtick}}field2{{.Backtick}}) VALUES (0,'str','str2'),(10,'str1','str3'),(2,'str4','str5') as t ON DUPLICATE KEY UPDATE
+func partQueryMultiInsert(table string, ents ...entity.SimpleBaseEntity) (query string, fields []string, args []interface{}) {
+	fields = tableFields(ents[0])
 
 	for _, ent := range ents {
 		if v, ok := ent.(entity.BaseEntity); ok {
@@ -71,7 +107,7 @@ func saveMultiple(ctx context.Context, db *sqlx.DB, table string, ents ...entity
 	   VALUES (0,'str','str2'),(10,'str1','str3'),(2,'str4','str5') as t
 	   ON DUPLICATE KEY UPDATE id=t.id,t.field1=t.field1,field2=t.field2;
 	*/
-	args := []interface{}{}
+	args = []interface{}{}
 	values := ""
 	m := reflectx.NewMapper(tagName)
 	for _, ent := range ents {
@@ -91,23 +127,8 @@ func saveMultiple(ctx context.Context, db *sqlx.DB, table string, ents ...entity
 		values += "(?" + strings.Repeat(",?", len(fields)-1) + ")"
 	}
 
-	updates := ""
-	for i, field := range fields {
-		if i > 0 {
-			updates += ","
-		}
-		updates += field + "=t." + field
-	}
-
-	query := "INSERT INTO {{.Backtick}}" + table + "{{.Backtick}}" + "({{.Backtick}}" + strings.Join(fields, "{{.Backtick}},{{.Backtick}}") + "{{.Backtick}})" + " VALUES " +
-		values + " as t ON DUPLICATE KEY UPDATE " + updates
-
-	if ctx == nil {
-		_, err = db.Exec(query, args...)
-
-	} else {
-		_, err = db.ExecContext(ctx, query, args...)
-	}
+	query = "INSERT INTO {{.Backtick}}" + table + "{{.Backtick}}" + "({{.Backtick}}" + strings.Join(fields, "{{.Backtick}},{{.Backtick}}") + "{{.Backtick}})" + " VALUES " +
+		values + " as t ON DUPLICATE KEY UPDATE "
 	return
 }
 
