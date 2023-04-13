@@ -48,6 +48,9 @@ func save(ctx context.Context, db *sqlx.DB, table string, ent entity.SimpleBaseE
 // Entities must be of the same type.
 // [!] Use with caution. For new entries, does not return an ID.
 func saveMultiple(ctx context.Context, db *sqlx.DB, table string, ents ...entity.SimpleBaseEntity) (err error) {
+	if len(ents) == 0 {
+		return
+	}
 	query, fields, args := partQueryMultiInsert(table, ents...)
 
 	for i, field := range fields {
@@ -67,6 +70,9 @@ func saveMultiple(ctx context.Context, db *sqlx.DB, table string, ents ...entity
 }
 
 func insertIgnoreDuplicates(ctx context.Context, db *sqlx.DB, table string, ents ...entity.SimpleBaseEntity) (err error) {
+	if len(ents) == 0 {
+		return
+	}
 	query, fields, args := partQueryMultiInsert(table, ents...)
 	query += "{{.Backtick}}" + fields[0] + "{{.Backtick}}=t." + fields[0]
 	if ctx == nil {
