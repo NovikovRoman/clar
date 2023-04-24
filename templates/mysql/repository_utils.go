@@ -62,13 +62,16 @@ func saveMultiple(ctx context.Context, db *sqlx.DB, table string, ents ...entity
 	primaryKey := getPrimaryKey(ents[0])
 	comma := false
 	for _, field := range fields {
+		if field == primaryKey {
+			continue;
+		}
+		
 		if comma {
 			query += ","
-		}
-		if field != primaryKey {
+		} else {
 			comma = true
-			query += "{{.Backtick}}" + field + "{{.Backtick}}=t." + field
 		}
+		query += "{{.Backtick}}" + field + "{{.Backtick}}=t." + field
 	}
 
 	if ctx == nil {
