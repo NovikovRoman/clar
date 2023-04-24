@@ -7,12 +7,13 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
 	"reflect"
 	"strings"
 	"time"
 	"unsafe"
 
-	"github.com/NovikovRoman/zipcoin/domain/entity"
+	"github.com/NovikovRoman/clar/domain/entity"
 	"github.com/jmoiron/sqlx"
 	"github.com/jmoiron/sqlx/reflectx"
 )
@@ -72,28 +73,8 @@ func saveMultiple(ctx context.Context, db *sqlx.DB, table string, ents ...entity
 		} else {
 			comma = true
 		}
-		query += "`" + field + "`=t." + field
+		query += fmt.Sprintf("`%s`=VALUES(`%s`)", field, field)
 	}
-
-	if ctx == nil {
-		_, err = db.Exec(query, args...)
-
-	} else {
-		_, err = db.ExecContext(ctx, query, args...)
-	}
-	return
-}
-
-// insertIgnoreDuplicates inserts multiple records into the database.
-// [!] be sure to specify primaryKey (pkey) if present.
-// Example: ID int64 `db:"id" pkey:"true"`
-func insertIgnoreDuplicates(ctx context.Context, db *sqlx.DB, table string, ents ...entity.SimpleBaseEntity) (err error) {
-	if len(ents) == 0 {
-		return
-	}
-	primaryKey := getPrimaryKey(ents[0])
-	query, _, args := partQueryMultiInsert(table, ents...)
-	query += "`" + primaryKey + "`=`" + primaryKey + "`"
 
 	if ctx == nil {
 		_, err = db.Exec(query, args...)

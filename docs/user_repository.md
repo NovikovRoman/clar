@@ -52,17 +52,6 @@ func (r *userRepository) SaveMultiple(ctx context.Context, user ...*entity.User)
 	return saveMultiple(ctx, r.db, r.table, items...)
 }
 
-// InsertIgnoreDuplicates inserts multiple records into the database.
-// [!] be sure to specify primaryKey (pkey) if present.
-// Example: ID int64 `db:"id" pkey:"true"`
-func (r *userRepository) InsertIgnoreDuplicates(ctx context.Context, user ...*entity.User) error {
-	items := make([]entity.SimpleBaseEntity, len(user))
-	for i, item := range user {
-		items[i] = item
-	}
-	return insertIgnoreDuplicates(ctx, r.db, r.table, items...)
-}
-
 func (r *userRepository) Save(ctx context.Context, user *entity.User) error {
 	return save(ctx, r.db, r.table, user)
 }

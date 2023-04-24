@@ -6,12 +6,13 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
 	"reflect"
 	"strings"
 	"time"
 	"unsafe"
 
-	"github.com/NovikovRoman/zipcoin/domain/entity"
+	"{{.Module}}/domain/entity"
 	"github.com/jmoiron/sqlx"
 	"github.com/jmoiron/sqlx/reflectx"
 )
@@ -57,8 +58,8 @@ func saveMultiple(ctx context.Context, db *sqlx.DB, table string, ents ...entity
 	if len(ents) == 0 {
 		return
 	}
-	query, fields, args := partQueryMultiInsert(table, ents...)
 
+	query, fields, args := partQueryMultiInsert(table, ents...)
 	primaryKey := getPrimaryKey(ents[0])
 	comma := false
 	for _, field := range fields {
@@ -71,28 +72,9 @@ func saveMultiple(ctx context.Context, db *sqlx.DB, table string, ents ...entity
 		} else {
 			comma = true
 		}
-		query += "{{.Backtick}}" + field + "{{.Backtick}}=t." + field
+		query += fmt.Sprintf("{{.Backtick}}%s{{.Backtick}}=VALUES({{.Backtick}}%s{{.Backtick}})", field, field)
 	}
 
-	if ctx == nil {
-		_, err = db.Exec(query, args...)
-
-	} else {
-		_, err = db.ExecContext(ctx, query, args...)
-	}
-	return
-}
-
-// insertIgnoreDuplicates inserts multiple records into the database.
-// [!] be sure to specify primaryKey (pkey) if present.
-// Example: ID int64 {{.Backtick}}db:"id" pkey:"true"{{.Backtick}}
-func insertIgnoreDuplicates(ctx context.Context, db *sqlx.DB, table string, ents ...entity.SimpleBaseEntity) (err error) {
-	if len(ents) == 0 {
-		return
-	}
-	primaryKey := getPrimaryKey(ents[0])
-	query, _, args := partQueryMultiInsert(table, ents...)
-	query += "{{.Backtick}}" + primaryKey + "{{.Backtick}}={{.Backtick}}" + primaryKey + "{{.Backtick}}"
 	if ctx == nil {
 		_, err = db.Exec(query, args...)
 
