@@ -17,7 +17,10 @@ import (
 	"github.com/jmoiron/sqlx/reflectx"
 )
 
-const tagName = "db"
+const (
+	tagName = "db"
+	tagPrimaryKey = "pkey"
+)
 
 // save saves the record to the database.
 //
@@ -47,18 +50,27 @@ func save(ctx context.Context, db *sqlx.DB, table string, ent entity.SimpleBaseE
 
 // saveMultiple saves multiple entries to the database. Adds new, updates existing entities.
 // Entities must be of the same type.
-// [!] Use with caution. For new entries, does not return an ID.
+// [!] Use with caution.
+// - for new entries, does not return an ID.
+// - be sure to specify primaryKey (pkey) if present.
+// Example: ID int64 `db:"id" pkey:"true"`
 func saveMultiple(ctx context.Context, db *sqlx.DB, table string, ents ...entity.SimpleBaseEntity) (err error) {
 	if len(ents) == 0 {
 		return
 	}
 	query, fields, args := partQueryMultiInsert(table, ents...)
 
-	for i, field := range fields {
-		if i > 0 {
+	primaryKey := getPrimaryKey(ents[0])
+	comma := false
+	for _, field := range fields {
+		if comma {
 			query += ","
 		}
-		query += "`" + field + "`=t." + field
+
+		if field != primaryKey {
+			comma = true
+			query += "`" + field + "`=t." + field
+		}
 	}
 
 	if ctx == nil {
@@ -70,12 +82,16 @@ func saveMultiple(ctx context.Context, db *sqlx.DB, table string, ents ...entity
 	return
 }
 
+// insertIgnoreDuplicates inserts multiple records into the database.
+// [!] be sure to specify primaryKey (pkey) if present.
+// Example: ID int64 `db:"id" pkey:"true"`
 func insertIgnoreDuplicates(ctx context.Context, db *sqlx.DB, table string, ents ...entity.SimpleBaseEntity) (err error) {
 	if len(ents) == 0 {
 		return
 	}
-	query, fields, args := partQueryMultiInsert(table, ents...)
-	query += "`" + fields[0] + "`=t." + fields[0]
+	primaryKey := getPrimaryKey(ents[0])
+	query, _, args := partQueryMultiInsert(table, ents...)
+	query += "`" + primaryKey + "`=`" + primaryKey + "`"
 
 	if ctx == nil {
 		_, err = db.Exec(query, args...)
@@ -283,5 +299,15 @@ func tableFields(ent entity.SimpleBaseEntity) (fields []string) {
 		fields = append(fields, field)
 	}
 	return
+}
+
+func getPrimaryKey(ent entity.SimpleBaseEntity) string {
+	m := reflectx.NewMapperFunc(tagName, func(s string) string { return s })
+	for k, n := range m.TypeMap(reflect.TypeOf(ent)).Names {
+		if n.Field.Tag.Get(tagPrimaryKey) != "" {
+			return k
+		}
+	}
+	return ""
 }
 ```

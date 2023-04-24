@@ -7,7 +7,7 @@ import "time"
 
 // User entity structure.
 type User struct {
-	ID   int64  `db:"id"`
+	ID   int64  `db:"id" pkey:"true"`
 
 	CreatedAt time.Time  `db:"created_at"`
 	UpdatedAt time.Time  `db:"updated_at"`

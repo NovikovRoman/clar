@@ -40,7 +40,10 @@ func (r *userRepository) GetByID(ctx context.Context, id int64) (user *entity.Us
 
 // SaveMultiple saves multiple entries to the database. Adds new, updates existing entities.
 // Entities must be of the same type.
-// [!] Use with caution. For new entries, does not return an ID.
+// [!] Use with caution.
+// - for new entries, does not return an ID.
+// - be sure to specify primaryKey (pkey) if present.
+// Example: ID int64 `db:"id" pkey:"true"`
 func (r *userRepository) SaveMultiple(ctx context.Context, user ...*entity.User) error {
 	items := make([]entity.SimpleBaseEntity, len(user))
 	for i, item := range user {
@@ -49,6 +52,9 @@ func (r *userRepository) SaveMultiple(ctx context.Context, user ...*entity.User)
 	return saveMultiple(ctx, r.db, r.table, items...)
 }
 
+// InsertIgnoreDuplicates inserts multiple records into the database.
+// [!] be sure to specify primaryKey (pkey) if present.
+// Example: ID int64 `db:"id" pkey:"true"`
 func (r *userRepository) InsertIgnoreDuplicates(ctx context.Context, user ...*entity.User) error {
 	items := make([]entity.SimpleBaseEntity, len(user))
 	for i, item := range user {

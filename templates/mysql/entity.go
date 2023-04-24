@@ -6,7 +6,7 @@ import "time"
 
 // {{.Entity}} entity structure.
 type {{.Entity}} struct {
-	ID int64 {{.Backtick}}db:"id"{{.Backtick}}
+	ID int64 {{.Backtick}}db:"id" pkey:"true"{{.Backtick}}
 
 	CreatedAt time.Time  {{.Backtick}}db:"created_at"{{.Backtick}}
 	UpdatedAt time.Time  {{.Backtick}}db:"updated_at"{{.Backtick}}
@@ -34,7 +34,7 @@ const SimpleEntity = `package entity
 
 // {{.Entity}} entity structure.
 type {{.Entity}} struct {
-	ID int64 {{.Backtick}}db:"id"{{.Backtick}}
+	ID int64 {{.Backtick}}db:"id" pkey:"true"{{.Backtick}}
 }
 
 func ({{.EntitySymb}} *{{.Entity}}) GetID() int64 {
