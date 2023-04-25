@@ -56,24 +56,38 @@ func save(ctx context.Context, db *sqlx.DB, table string, ent entity.SimpleBaseE
 // - be sure to specify primaryKey (pkey) if present.
 // Example: ID int64 `db:"id" pkey:"true"`
 func saveMultiple(ctx context.Context, db *sqlx.DB, table string, ents ...entity.SimpleBaseEntity) (err error) {
+	return saveMultipleBase(ctx, db, table, false, ents...)
+}
+
+// saveMultipleIgnoreDuplicates saves multiple entries to the database. Adds new, ignore existing entities.
+// Entities must be of the same type.
+// [!] Use with caution.
+// - for new entries, does not return an ID.
+func saveMultipleIgnoreDuplicates(ctx context.Context, db *sqlx.DB, table string, ents ...entity.SimpleBaseEntity) (err error) {
+	return saveMultipleBase(ctx, db, table, true, ents...)
+}
+
+func saveMultipleBase(ctx context.Context, db *sqlx.DB, table string, ignore bool, ents ...entity.SimpleBaseEntity) (err error) {
 	if len(ents) == 0 {
 		return
 	}
-	query, fields, args := partQueryMultiInsert(table, ents...)
 
-	primaryKey := getPrimaryKey(ents[0])
-	comma := false
-	for _, field := range fields {
-		if field == primaryKey {
-			continue;
+	query, fields, args := partQueryMultiInsert(table, ignore, ents...)
+	if !ignore {
+		primaryKey := getPrimaryKey(ents[0])
+		comma := false
+		for _, field := range fields {
+			if field == primaryKey {
+				continue
+			}
+
+			if comma {
+				query += ","
+			} else {
+				comma = true
+			}
+			query += fmt.Sprintf("`%s`=VALUES(`%s`)", field, field)
 		}
-		
-		if comma {
-			query += ","
-		} else {
-			comma = true
-		}
-		query += fmt.Sprintf("`%s`=VALUES(`%s`)", field, field)
 	}
 
 	if ctx == nil {
@@ -89,9 +103,9 @@ func saveMultiple(ctx context.Context, db *sqlx.DB, table string, ents ...entity
 // There is a space at the end of the line.
 //
 // Example:
-// INSERT INTO table(`id`,`field1`,`field2`) VALUES (0,'str','str2'),(10,'str1','str3'),(2,'str4','str5') as t
-// ON DUPLICATE KEY UPDATE
-func partQueryMultiInsert(table string, ents ...entity.SimpleBaseEntity) (query string, fields []string, args []interface{}) {
+// INSERT [IGNORE] INTO table(`id`,`field1`,`field2`) VALUES (0,'str','str2'),(10,'str1','str3'),(2,'str4','str5') as t
+// [ON DUPLICATE KEY UPDATE]
+func partQueryMultiInsert(table string, ignore bool, ents ...entity.SimpleBaseEntity) (query string, fields []string, args []interface{}) {
 	fields = tableFields(ents[0])
 
 	for _, ent := range ents {
@@ -135,8 +149,15 @@ func partQueryMultiInsert(table string, ents ...entity.SimpleBaseEntity) (query 
 		values += "(?" + strings.Repeat(",?", len(fields)-1) + ")"
 	}
 
-	query = "INSERT INTO `" + table + "`" + "(`" + strings.Join(fields, "`,`") + "`)" + " VALUES " +
-		values + " as t ON DUPLICATE KEY UPDATE "
+	query = "INSERT "
+	if ignore {
+		query += "IGNORE "
+	}
+	query += "INTO `" + table + "`" + "(`" + strings.Join(fields, "`,`") + "`)" + " VALUES " +
+		values + " "
+	if !ignore {
+		query += "ON DUPLICATE KEY UPDATE "
+	}
 	return
 }
 

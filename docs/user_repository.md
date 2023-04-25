@@ -52,6 +52,18 @@ func (r *userRepository) SaveMultiple(ctx context.Context, user ...*entity.User)
 	return saveMultiple(ctx, r.db, r.table, items...)
 }
 
+// SaveMultipleIgnoreDuplicates saves multiple entries to the database. Adds new, ignore existing entities.
+// Entities must be of the same type.
+// [!] Use with caution.
+// - for new entries, does not return an ID.
+func (r *userRepository) SaveMultipleIgnoreDuplicates(ctx context.Context, user ...*entity.User) error {
+	items := make([]entity.SimpleBaseEntity, len(user))
+	for i, item := range user {
+		items[i] = item
+	}
+	return saveMultipleIgnoreDuplicates(ctx, r.db, r.table, items...)
+}
+
 func (r *userRepository) Save(ctx context.Context, user *entity.User) error {
 	return save(ctx, r.db, r.table, user)
 }

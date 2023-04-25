@@ -13,6 +13,7 @@ type {{.Entity}}Repository interface {
 	GetByID(ctx context.Context, id int64) ({{.EntityName}} *entity.{{.Entity}}, err error)
 	Save(ctx context.Context, {{.EntityName}} *entity.{{.Entity}}) (err error)
 	SaveMultiple(ctx context.Context, {{.EntityName}} ...*entity.{{.Entity}}) error
+	SaveMultipleIgnoreDuplicates(ctx context.Context, {{.EntityName}} ...*entity.{{.Entity}}) error
 	Update(ctx context.Context, {{.EntityName}} *entity.{{.Entity}}) (err error)
 	Remove(ctx context.Context, {{.EntityName}} *entity.{{.Entity}}) (err error)
 }
