@@ -275,7 +275,7 @@ func setDeletedAt(ent entity.BaseEntity, t *time.Time) {
 	v.FieldByName("DeletedAt").SetPointer(nil)
 }
 
-func fieldsForInsert(ent entity.SimpleBaseEntity) (set string, values string) {
+func fieldsForInsert(ent interface{}) (set string, values string) {
 	for i, name := range tableFields(ent) {
 		if i > 0 {
 			set += ","
@@ -287,7 +287,7 @@ func fieldsForInsert(ent entity.SimpleBaseEntity) (set string, values string) {
 	return
 }
 
-func fieldsForUpdate(ent entity.SimpleBaseEntity) (set string) {
+func fieldsForUpdate(ent interface{}) (set string) {
 	for i, name := range tableFields(ent) {
 		if i > 0 {
 			set += ","
@@ -297,7 +297,7 @@ func fieldsForUpdate(ent entity.SimpleBaseEntity) (set string) {
 	return
 }
 
-func tableFields(ent entity.SimpleBaseEntity) (fields []string) {
+func tableFields(ent interface{}) (fields []string) {
 	m := reflectx.NewMapperFunc(tagName, func(s string) string { return s })
 	for field := range m.TypeMap(reflect.TypeOf(ent)).Names {
 		fields = append(fields, field)
