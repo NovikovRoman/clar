@@ -26,9 +26,9 @@ const (
 //
 // New record - creates in a DB, existing - updates in a DB. If the entry:
 //
-// - entity.SimpleEntity regular update of a record in the database,
+// - entity.SimpleBaseEntity regular update of a record in the database,
 //
-// - entity.Entity regular update of the record in the database
+// - entity.BaseEntity regular update of the record in the database
 //     and the auto-update of the date in the UpdatedAt field.
 func save(ctx context.Context, db *sqlx.DB, table string, ent entity.SimpleBaseEntity) (err error) {
 	if ent.GetID() == 0 {
@@ -54,7 +54,7 @@ func save(ctx context.Context, db *sqlx.DB, table string, ent entity.SimpleBaseE
 // - for new entries, does not return an ID.
 // - be sure to specify primaryKey (pkey) if present.
 // Example: ID int64 {{.Backtick}}db:"id" pkey:"true"{{.Backtick}}
-func saveMultiple(ctx context.Context, db *sqlx.DB, table string, ents ...entity.SimpleBaseEntity) (err error) {
+func saveMultiple(ctx context.Context, db *sqlx.DB, table string, ents ...interface{}) (err error) {
 	return saveMultipleBase(ctx, db, table, false, ents...)
 }
 
@@ -64,11 +64,11 @@ func saveMultiple(ctx context.Context, db *sqlx.DB, table string, ents ...entity
 // - for new entries, does not return an ID.
 // - be sure to specify primaryKey (pkey) if present.
 // Example: ID int64 {{.Backtick}}db:"id" pkey:"true"{{.Backtick}}
-func saveMultipleIgnoreDuplicates(ctx context.Context, db *sqlx.DB, table string, ents ...entity.SimpleBaseEntity) (err error) {
+func saveMultipleIgnoreDuplicates(ctx context.Context, db *sqlx.DB, table string, ents ...interface{}) (err error) {
 	return saveMultipleBase(ctx, db, table, true, ents...)
 }
 
-func saveMultipleBase(ctx context.Context, db *sqlx.DB, table string, ignore bool, ents ...entity.SimpleBaseEntity) (err error) {
+func saveMultipleBase(ctx context.Context, db *sqlx.DB, table string, ignore bool, ents ...interface{}) (err error) {
 	if len(ents) == 0 {
 		return
 	}
@@ -106,14 +106,14 @@ func saveMultipleBase(ctx context.Context, db *sqlx.DB, table string, ignore boo
 // Example:
 // INSERT [IGNORE] INTO table({{.Backtick}}id{{.Backtick}},{{.Backtick}}field1{{.Backtick}},{{.Backtick}}field2{{.Backtick}}) VALUES (0,'str','str2'),(10,'str1','str3'),(2,'str4','str5') as t
 // [ON DUPLICATE KEY UPDATE]
-func partQueryMultiInsert(table string, ignore bool, ents ...entity.SimpleBaseEntity) (query string, fields []string, args []interface{}) {
+func partQueryMultiInsert(table string, ignore bool, ents ...interface{}) (query string, fields []string, args []interface{}) {
 	fields = tableFields(ents[0])
 
 	for _, ent := range ents {
 		if v, ok := ent.(entity.BaseEntity); ok {
 			setUpdatedAt(v, time.Now())
 
-			if ent.GetID() == 0 {
+			if v.GetID() == 0 {
 				setCreatedAt(v, time.Now())
 				if v.GetUpdatedAt().IsZero() {
 					setUpdatedAt(v, time.Now())
@@ -306,7 +306,7 @@ func tableFields(ent interface{}) (fields []string) {
 	return
 }
 
-func getPrimaryKey(ent entity.SimpleBaseEntity) string {
+func getPrimaryKey(ent interface{}) string {
 	m := reflectx.NewMapperFunc(tagName, func(s string) string { return s })
 	for k, n := range m.TypeMap(reflect.TypeOf(ent)).Names {
 		if n.Field.Tag.Get(tagPrimaryKey) != "" {
