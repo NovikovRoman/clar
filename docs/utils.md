@@ -27,9 +27,9 @@ const (
 //
 // New record - creates in a DB, existing - updates in a DB. If the entry:
 //
-// - entity.SimpleEntity regular update of a record in the database,
+// - entity.SimpleBaseEntity regular update of a record in the database,
 //
-//   - entity.Entity regular update of the record in the database
+// - entity.BaseEntity regular update of the record in the database
 //     and the auto-update of the date in the UpdatedAt field.
 func save(ctx context.Context, db *sqlx.DB, table string, ent entity.SimpleBaseEntity) (err error) {
 	if ent.GetID() == 0 {
@@ -167,7 +167,7 @@ func partQueryMultiInsert(table string, ignore bool, ents ...interface{}) (query
 //
 // - entity.SimpleBaseEntity the usual creation of a record in the database,
 //
-//   - entity.BaseEntity the usual creation of a record in the database,
+// - entity.BaseEntity the usual creation of a record in the database,
 //     setting CreatedAt to the current time, UpdatedAt if not set - to the current time,
 //     DeletedAt if not set - nil.
 func create(ctx context.Context, db *sqlx.DB, table string, ent entity.SimpleBaseEntity) (err error) {
