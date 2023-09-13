@@ -22,22 +22,28 @@ func (m MyStruct) String() string {
 }
 
 func (m *MyStruct) Scan(val interface{}) error {
+	var value MyStruct
 	switch v := val.(type) {
 	case []byte:
 		if bytes.Equal(v, []byte("[]")) || bytes.Equal(v, []byte("{}")) {
 			return nil
 		}
-		return json.Unmarshal(v, m)
+		err = json.Unmarshal(v, &value)
 
 	case string:
 		if v == "[]" || v == "{}" {
 			return nil
 		}
-		return json.Unmarshal([]byte(v), m)
+		err = json.Unmarshal([]byte(v), &value)
 
 	default:
-		returnfmt.Errorf("Unsupported type: %T", v)
+		err = fmt.Errorf("Unsupported type: %T", v)
 	}
+
+	if err == nil {
+		*m = value
+	}
+	return
 }
 
 func (m MyStruct) Value() (driver.Value, error) {
@@ -47,7 +53,7 @@ func (m MyStruct) Value() (driver.Value, error) {
 func (m MyStruct) ConvertValue() (string, error) {
 	b, err := json.Marshal(m)
 	if err != nil {
-		return "[]", err
+		return "{}", err
 	}
 	return string(b), nil
 }

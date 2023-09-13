@@ -21,22 +21,28 @@ func ({{.StructSymb}} {{.Struct}}) String() string {
 }
 
 func ({{.StructSymb}} *{{.Struct}}) Scan(val interface{}) error {
+	var value {{.Struct}}
 	switch v := val.(type) {
 	case []byte:
 		if bytes.Equal(v, []byte("[]")) || bytes.Equal(v, []byte("{}")) {
 			return nil
 		}
-		return json.Unmarshal(v, {{.StructSymb}})
+		err = json.Unmarshal(v, &value)
 
 	case string:
 		if v == "[]" || v == "{}" {
 			return nil
 		}
-		return json.Unmarshal([]byte(v), {{.StructSymb}})
+		err = json.Unmarshal([]byte(v), &value)
 
 	default:
-		return fmt.Errorf("Unsupported type: %T", v)
+		err = fmt.Errorf("Unsupported type: %T", v)
 	}
+
+	if err == nil {
+		*{{.StructSymb}} = value
+	}
+	return
 }
 
 func ({{.StructSymb}} {{.Struct}}) Value() (driver.Value, error) {
@@ -46,7 +52,7 @@ func ({{.StructSymb}} {{.Struct}}) Value() (driver.Value, error) {
 func ({{.StructSymb}} {{.Struct}}) ConvertValue() (string, error) {
 	b, err := json.Marshal({{.StructSymb}})
 	if err != nil {
-		return "[]", err
+		return "{}", err
 	}
 	return string(b), nil
 }

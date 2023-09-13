@@ -300,6 +300,9 @@ func fieldsForUpdate(ent interface{}) (set string) {
 func tableFields(ent interface{}) (fields []string) {
 	m := reflectx.NewMapperFunc(tagName, func(s string) string { return s })
 	for field := range m.TypeMap(reflect.TypeOf(ent)).Names {
+		if strings.Contains(field, ".") {
+			continue
+		}
 		fields = append(fields, field)
 	}
 	return
