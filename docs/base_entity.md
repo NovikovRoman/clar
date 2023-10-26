@@ -6,14 +6,14 @@ package entity
 import "time"
 
 type SimpleBaseEntity interface {
-	GetID() int64
+    GetID() int64
 }
 
 type BaseEntity interface {
-	SimpleEntity
+    SimpleEntity
 
-	GetCreatedAt() time.Time
-	GetUpdatedAt() time.Time
-	GetDeletedAt() *time.Time
+    GetCreatedAt() time.Time
+    GetUpdatedAt() time.Time
+    GetDeletedAt() *time.Time
 }
 ```

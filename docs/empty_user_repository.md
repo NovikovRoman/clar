@@ -4,22 +4,22 @@
 package mysql
 
 import (
-	"github.com/NovikovRoman/clar/domain/repository"
-	"github.com/jmoiron/sqlx"
+    "github.com/NovikovRoman/clar/domain/repository"
+    "github.com/jmoiron/sqlx"
 )
 
 type userRepository struct {
-	table string
-	db    *sqlx.DB
+    table string
+    db    *sqlx.DB
 }
 
 func NewUserRepository(db *sqlx.DB) repository.UserRepository {
-	return &userRepository{
-		table: "users",
-		db:    db,
-	}
+    return &userRepository{
+        table: "users",
+        db:    db,
+    }
 }
 
 func (r *userRepository) Table() string {
-	return r.table
+    return r.table
 }

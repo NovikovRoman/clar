@@ -4,13 +4,13 @@
 
 Migration up:
 
-```
+```plain
 [version]_[name].up.sql
 ```
 
 Rollback migration:
 
-```
+```plain
 [version]_[name].down.sql
 ```
 

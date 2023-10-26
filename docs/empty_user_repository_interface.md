@@ -4,6 +4,6 @@
 package repository
 
 type UserRepository interface {
-	Table() string
+    Table() string
 }
 ```

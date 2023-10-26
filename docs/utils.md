@@ -4,23 +4,23 @@
 package mysql
 
 import (
-	"context"
-	"database/sql"
-	"errors"
-	"fmt"
-	"reflect"
-	"strings"
-	"time"
-	"unsafe"
+    "context"
+    "database/sql"
+    "errors"
+    "fmt"
+    "reflect"
+    "strings"
+    "time"
+    "unsafe"
 
-	"github.com/NovikovRoman/clar/domain/entity"
-	"github.com/jmoiron/sqlx"
-	"github.com/jmoiron/sqlx/reflectx"
+    "github.com/NovikovRoman/clar/domain/entity"
+    "github.com/jmoiron/sqlx"
+    "github.com/jmoiron/sqlx/reflectx"
 )
 
 const (
-	tagName = "db"
-	tagPrimaryKey = "pkey"
+    tagName = "db"
+    tagPrimaryKey = "pkey"
 )
 
 // save saves the record to the database.
@@ -32,21 +32,21 @@ const (
 // - entity.BaseEntity regular update of the record in the database
 //     and the auto-update of the date in the UpdatedAt field.
 func save(ctx context.Context, db *sqlx.DB, table string, ent entity.SimpleBaseEntity) (err error) {
-	if ent.GetID() == 0 {
-		return create(ctx, db, table, ent)
-	}
+    if ent.GetID() == 0 {
+        return create(ctx, db, table, ent)
+    }
 
-	if v, ok := ent.(entity.BaseEntity); ok {
-		setUpdatedAt(v, time.Now())
-	}
+    if v, ok := ent.(entity.BaseEntity); ok {
+        setUpdatedAt(v, time.Now())
+    }
 
-	query := "UPDATE `" + table + "` SET " + fieldsForUpdate(ent) + " WHERE id=:id"
-	if ctx == nil {
-		_, err = db.NamedExec(query, ent)
-	} else {
-		_, err = db.NamedExecContext(ctx, query, ent)
-	}
-	return
+    query := "UPDATE `" + table + "` SET " + fieldsForUpdate(ent) + " WHERE id=:id"
+    if ctx == nil {
+        _, err = db.NamedExec(query, ent)
+    } else {
+        _, err = db.NamedExecContext(ctx, query, ent)
+    }
+    return
 }
 
 // saveMultiple saves multiple entries to the database. Adds new, updates existing entities.
@@ -56,7 +56,7 @@ func save(ctx context.Context, db *sqlx.DB, table string, ent entity.SimpleBaseE
 // - be sure to specify primaryKey (pkey) if present.
 // Example: ID int64 `db:"id" pkey:"true"`
 func saveMultiple(ctx context.Context, db *sqlx.DB, table string, ents ...interface{}) (err error) {
-	return saveMultipleBase(ctx, db, table, false, ents...)
+    return saveMultipleBase(ctx, db, table, false, ents...)
 }
 
 // saveMultipleIgnoreDuplicates saves multiple entries to the database. Adds new, ignore existing entities.
@@ -64,39 +64,39 @@ func saveMultiple(ctx context.Context, db *sqlx.DB, table string, ents ...interf
 // [!] Use with caution.
 // - for new entries, does not return an ID.
 func saveMultipleIgnoreDuplicates(ctx context.Context, db *sqlx.DB, table string, ents ...interface{}) (err error) {
-	return saveMultipleBase(ctx, db, table, true, ents...)
+    return saveMultipleBase(ctx, db, table, true, ents...)
 }
 
 func saveMultipleBase(ctx context.Context, db *sqlx.DB, table string, ignore bool, ents ...interface{}) (err error) {
-	if len(ents) == 0 {
-		return
-	}
+    if len(ents) == 0 {
+        return
+    }
 
-	query, fields, args := partQueryMultiInsert(table, ignore, ents...)
-	if !ignore {
-		primaryKey := getPrimaryKey(ents[0])
-		comma := false
-		for _, field := range fields {
-			if field == primaryKey {
-				continue
-			}
+    query, fields, args := partQueryMultiInsert(table, ignore, ents...)
+    if !ignore {
+        primaryKey := getPrimaryKey(ents[0])
+        comma := false
+        for _, field := range fields {
+            if field == primaryKey {
+                continue
+            }
 
-			if comma {
-				query += ","
-			} else {
-				comma = true
-			}
-			query += fmt.Sprintf("`%s`=VALUES(`%s`)", field, field)
-		}
-	}
+            if comma {
+                query += ","
+            } else {
+                comma = true
+            }
+            query += fmt.Sprintf("`%s`=VALUES(`%s`)", field, field)
+        }
+    }
 
-	if ctx == nil {
-		_, err = db.Exec(query, args...)
+    if ctx == nil {
+        _, err = db.Exec(query, args...)
 
-	} else {
-		_, err = db.ExecContext(ctx, query, args...)
-	}
-	return
+    } else {
+        _, err = db.ExecContext(ctx, query, args...)
+    }
+    return
 }
 
 // partQueryMultiInsert inserts multiple records into the database.
@@ -106,59 +106,59 @@ func saveMultipleBase(ctx context.Context, db *sqlx.DB, table string, ignore boo
 // INSERT [IGNORE] INTO table(`id`,`field1`,`field2`) VALUES (0,'str','str2'),(10,'str1','str3'),(2,'str4','str5') as t
 // [ON DUPLICATE KEY UPDATE]
 func partQueryMultiInsert(table string, ignore bool, ents ...interface{}) (query string, fields []string, args []interface{}) {
-	fields = tableFields(ents[0])
+    fields = tableFields(ents[0])
 
-	for _, ent := range ents {
-		if v, ok := ent.(entity.BaseEntity); ok {
-			setUpdatedAt(v, time.Now())
+    for _, ent := range ents {
+        if v, ok := ent.(entity.BaseEntity); ok {
+            setUpdatedAt(v, time.Now())
 
-			if v.GetID() == 0 {
-				setCreatedAt(v, time.Now())
-				if v.GetUpdatedAt().IsZero() {
-					setUpdatedAt(v, time.Now())
-				}
-				if v.GetDeletedAt() != nil && v.GetDeletedAt().IsZero() {
-					setDeletedAt(v, nil)
-				}
-			}
-		}
-	}
+            if v.GetID() == 0 {
+                setCreatedAt(v, time.Now())
+                if v.GetUpdatedAt().IsZero() {
+                    setUpdatedAt(v, time.Now())
+                }
+                if v.GetDeletedAt() != nil && v.GetDeletedAt().IsZero() {
+                    setDeletedAt(v, nil)
+                }
+            }
+        }
+    }
 
-	/*
-	   INSERT INTO table(`id`,`field1`,`field2`)
-	   VALUES (0,'str','str2'),(10,'str1','str3'),(2,'str4','str5') as t
-	   ON DUPLICATE KEY UPDATE id=t.id,t.field1=t.field1,field2=t.field2;
-	*/
-	args = []interface{}{}
-	values := ""
-	m := reflectx.NewMapper(tagName)
-	for _, ent := range ents {
-		for _, field := range fields {
-			v := m.FieldByName(reflect.ValueOf(ent), field)
-			if v.Type().String() == "*time.Time" && v.Interface().(*time.Time).IsZero() {
-				args = append(args, nil)
+    /*
+       INSERT INTO table(`id`,`field1`,`field2`)
+       VALUES (0,'str','str2'),(10,'str1','str3'),(2,'str4','str5') as t
+       ON DUPLICATE KEY UPDATE id=t.id,t.field1=t.field1,field2=t.field2;
+    */
+    args = []interface{}{}
+    values := ""
+    m := reflectx.NewMapper(tagName)
+    for _, ent := range ents {
+        for _, field := range fields {
+            v := m.FieldByName(reflect.ValueOf(ent), field)
+            if v.Type().String() == "*time.Time" && v.Interface().(*time.Time).IsZero() {
+                args = append(args, nil)
 
-			} else {
-				args = append(args, v.Interface())
-			}
-		}
+            } else {
+                args = append(args, v.Interface())
+            }
+        }
 
-		if values != "" {
-			values += ","
-		}
-		values += "(?" + strings.Repeat(",?", len(fields)-1) + ")"
-	}
+        if values != "" {
+            values += ","
+        }
+        values += "(?" + strings.Repeat(",?", len(fields)-1) + ")"
+    }
 
-	query = "INSERT "
-	if ignore {
-		query += "IGNORE "
-	}
-	query += "INTO `" + table + "`" + "(`" + strings.Join(fields, "`,`") + "`)" + " VALUES " +
-		values + " "
-	if !ignore {
-		query += "ON DUPLICATE KEY UPDATE "
-	}
-	return
+    query = "INSERT "
+    if ignore {
+        query += "IGNORE "
+    }
+    query += "INTO `" + table + "`" + "(`" + strings.Join(fields, "`,`") + "`)" + " VALUES " +
+        values + " "
+    if !ignore {
+        query += "ON DUPLICATE KEY UPDATE "
+    }
+    return
 }
 
 // create creates a record in the database.
@@ -171,46 +171,46 @@ func partQueryMultiInsert(table string, ignore bool, ents ...interface{}) (query
 //     setting CreatedAt to the current time, UpdatedAt if not set - to the current time,
 //     DeletedAt if not set - nil.
 func create(ctx context.Context, db *sqlx.DB, table string, ent entity.SimpleBaseEntity) (err error) {
-	if ent.GetID() > 0 {
-		return save(ctx, db, table, ent)
-	}
+    if ent.GetID() > 0 {
+        return save(ctx, db, table, ent)
+    }
 
-	if vEnt, ok := ent.(entity.BaseEntity); ok {
-		setCreatedAt(vEnt, time.Now())
-		if vEnt.GetUpdatedAt().IsZero() {
-			setUpdatedAt(vEnt, time.Now())
-		}
-		if vEnt.GetDeletedAt() != nil && vEnt.GetDeletedAt().IsZero() {
-			setDeletedAt(vEnt, nil)
-		}
-	}
+    if vEnt, ok := ent.(entity.BaseEntity); ok {
+        setCreatedAt(vEnt, time.Now())
+        if vEnt.GetUpdatedAt().IsZero() {
+            setUpdatedAt(vEnt, time.Now())
+        }
+        if vEnt.GetDeletedAt() != nil && vEnt.GetDeletedAt().IsZero() {
+            setDeletedAt(vEnt, nil)
+        }
+    }
 
-	set, values := fieldsForInsert(ent)
+    set, values := fieldsForInsert(ent)
 
-	var res sql.Result
-	query := "INSERT INTO `" + table + "` (" + set + ") VALUES (" + values + ")"
-	if ctx == nil {
-		res, err = db.NamedExec(query, ent)
-	} else {
-		res, err = db.NamedExecContext(ctx, query, ent)
-	}
+    var res sql.Result
+    query := "INSERT INTO `" + table + "` (" + set + ") VALUES (" + values + ")"
+    if ctx == nil {
+        res, err = db.NamedExec(query, ent)
+    } else {
+        res, err = db.NamedExecContext(ctx, query, ent)
+    }
 
-	if err == nil {
-		var id int64
-		id, err = res.LastInsertId()
-		setID(ent, id)
-	}
-	return
+    if err == nil {
+        var id int64
+        id, err = res.LastInsertId()
+        setID(ent, id)
+    }
+    return
 }
 
 // update updates a record in the database. Alias save.
 func update(ctx context.Context, db *sqlx.DB, table string, ent entity.SimpleBaseEntity) (err error) {
-	if ent.GetID() == 0 {
-		err = errors.New("This is a new entry. ")
-		return
-	}
+    if ent.GetID() == 0 {
+        err = errors.New("This is a new entry. ")
+        return
+    }
 
-	return save(ctx, db, table, ent)
+    return save(ctx, db, table, ent)
 }
 
 // remove deleting an entry from the database or marking it as a deleted entry in cases where entity:
@@ -219,102 +219,102 @@ func update(ctx context.Context, db *sqlx.DB, table string, ent entity.SimpleBas
 //
 // - entity.BaseEntity - marks the entry in the database as deleted.
 func remove(ctx context.Context, db *sqlx.DB, table string, ent entity.SimpleBaseEntity) (err error) {
-	if ent.GetID() == 0 {
-		return
-	}
+    if ent.GetID() == 0 {
+        return
+    }
 
-	var sql string
-	if _, ok := ent.(entity.BaseEntity); ok {
-		sql = "UPDATE `" + table + "` SET `deleted_at`=null WHERE `id`=?"
-	} else {
-		sql = "DELETE FROM `" + table + "` WHERE `id`=?"
-	}
+    var sql string
+    if _, ok := ent.(entity.BaseEntity); ok {
+        sql = "UPDATE `" + table + "` SET `deleted_at`=null WHERE `id`=?"
+    } else {
+        sql = "DELETE FROM `" + table + "` WHERE `id`=?"
+    }
 
-	if ctx == nil {
-		_, err = db.Exec(sql, ent.GetID())
-	} else {
-		_, err = db.ExecContext(ctx, sql, ent.GetID())
-	}
-	return
+    if ctx == nil {
+        _, err = db.Exec(sql, ent.GetID())
+    } else {
+        _, err = db.ExecContext(ctx, sql, ent.GetID())
+    }
+    return
 }
 
 func setID(ent entity.SimpleBaseEntity, id int64) {
-	v := reflect.ValueOf(ent)
-	if v.Kind() == reflect.Ptr {
-		v = v.Elem()
-	}
-	v.FieldByName("ID").SetInt(id)
+    v := reflect.ValueOf(ent)
+    if v.Kind() == reflect.Ptr {
+        v = v.Elem()
+    }
+    v.FieldByName("ID").SetInt(id)
 }
 
 func setCreatedAt(ent entity.BaseEntity, t time.Time) {
-	v := reflect.ValueOf(ent)
-	if v.Kind() == reflect.Ptr {
-		v = v.Elem()
-	}
-	v.FieldByName("CreatedAt").Set(reflect.ValueOf(t))
+    v := reflect.ValueOf(ent)
+    if v.Kind() == reflect.Ptr {
+        v = v.Elem()
+    }
+    v.FieldByName("CreatedAt").Set(reflect.ValueOf(t))
 }
 
 func setUpdatedAt(ent entity.BaseEntity, t time.Time) {
-	v := reflect.ValueOf(ent)
-	if v.Kind() == reflect.Ptr {
-		v = v.Elem()
-	}
-	v.FieldByName("UpdatedAt").Set(reflect.ValueOf(t))
+    v := reflect.ValueOf(ent)
+    if v.Kind() == reflect.Ptr {
+        v = v.Elem()
+    }
+    v.FieldByName("UpdatedAt").Set(reflect.ValueOf(t))
 }
 
 func setDeletedAt(ent entity.BaseEntity, t *time.Time) {
-	v := reflect.ValueOf(ent)
-	if v.Kind() == reflect.Ptr {
-		v = v.Elem()
-	}
+    v := reflect.ValueOf(ent)
+    if v.Kind() == reflect.Ptr {
+        v = v.Elem()
+    }
 
-	if t != nil {
-		v.FieldByName("DeletedAt").SetPointer(unsafe.Pointer(t))
-		return
-	}
-	v.FieldByName("DeletedAt").SetPointer(nil)
+    if t != nil {
+        v.FieldByName("DeletedAt").SetPointer(unsafe.Pointer(t))
+        return
+    }
+    v.FieldByName("DeletedAt").SetPointer(nil)
 }
 
 func fieldsForInsert(ent interface{}) (set string, values string) {
-	for i, name := range tableFields(ent) {
-		if i > 0 {
-			set += ","
-			values += ","
-		}
-		set += "`" + name + "`"
-		values += ":" + name
-	}
-	return
+    for i, name := range tableFields(ent) {
+        if i > 0 {
+            set += ","
+            values += ","
+        }
+        set += "`" + name + "`"
+        values += ":" + name
+    }
+    return
 }
 
 func fieldsForUpdate(ent interface{}) (set string) {
-	for i, name := range tableFields(ent) {
-		if i > 0 {
-			set += ","
-		}
-		set += "`" + name + "`=:" + name
-	}
-	return
+    for i, name := range tableFields(ent) {
+        if i > 0 {
+            set += ","
+        }
+        set += "`" + name + "`=:" + name
+    }
+    return
 }
 
 func tableFields(ent interface{}) (fields []string) {
-	m := reflectx.NewMapperFunc(tagName, func(s string) string { return s })
-	for field := range m.TypeMap(reflect.TypeOf(ent)).Names {
-		if strings.Contains(field, ".") {
-			continue
-		}
-		fields = append(fields, field)
-	}
-	return
+    m := reflectx.NewMapperFunc(tagName, func(s string) string { return s })
+    for field := range m.TypeMap(reflect.TypeOf(ent)).Names {
+        if strings.Contains(field, ".") {
+            continue
+        }
+        fields = append(fields, field)
+    }
+    return
 }
 
 func getPrimaryKey(ent interface{}) string {
-	m := reflectx.NewMapperFunc(tagName, func(s string) string { return s })
-	for k, n := range m.TypeMap(reflect.TypeOf(ent)).Names {
-		if n.Field.Tag.Get(tagPrimaryKey) != "" {
-			return k
-		}
-	}
-	return ""
+    m := reflectx.NewMapperFunc(tagName, func(s string) string { return s })
+    for k, n := range m.TypeMap(reflect.TypeOf(ent)).Names {
+        if n.Field.Tag.Get(tagPrimaryKey) != "" {
+            return k
+        }
+    }
+    return ""
 }
 ```
