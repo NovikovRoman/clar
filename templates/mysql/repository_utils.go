@@ -40,11 +40,7 @@ func save(ctx context.Context, db *sqlx.DB, table string, ent entity.SimpleBaseE
 	}
 
 	query := "UPDATE {{.Backtick}}" + table + "{{.Backtick}} SET " + fieldsForUpdate(ent) + " WHERE id=:id"
-	if ctx == nil {
-		_, err = db.NamedExec(query, ent)
-	} else {
-		_, err = db.NamedExecContext(ctx, query, ent)
-	}
+	_, err = db.NamedExecContext(ctx, query, ent)
 	return
 }
 
@@ -91,12 +87,7 @@ func saveMultipleBase(ctx context.Context, db *sqlx.DB, table string, ignore boo
 		}
 	}
 
-	if ctx == nil {
-		_, err = db.Exec(query, args...)
-
-	} else {
-		_, err = db.ExecContext(ctx, query, args...)
-	}
+	_, err = db.ExecContext(ctx, query, args...)
 	return
 }
 
@@ -190,11 +181,7 @@ func create(ctx context.Context, db *sqlx.DB, table string, ent entity.SimpleBas
 
 	var res sql.Result
 	query := "INSERT INTO {{.Backtick}}" + table + "{{.Backtick}} (" + set + ") VALUES (" + values + ")"
-	if ctx == nil {
-		res, err = db.NamedExec(query, ent)
-	} else {
-		res, err = db.NamedExecContext(ctx, query, ent)
-	}
+	res, err = db.NamedExecContext(ctx, query, ent)
 
 	if err == nil {
 		var id int64
@@ -221,22 +208,18 @@ func update(ctx context.Context, db *sqlx.DB, table string, ent entity.SimpleBas
 // - entity.BaseEntity - marks the entry in the database as deleted.
 func remove(ctx context.Context, db *sqlx.DB, table string, ent entity.SimpleBaseEntity) (err error) {
 	if ent.GetID() == 0 {
-		return
-	}
+        return
+    }
 
-	var sql string
-	if _, ok := ent.(entity.BaseEntity); ok {
-		sql = "UPDATE {{.Backtick}}" + table + "{{.Backtick}} SET {{.Backtick}}deleted_at{{.Backtick}}=null WHERE {{.Backtick}}id{{.Backtick}}=?"
-	} else {
-		sql = "DELETE FROM {{.Backtick}}" + table + "{{.Backtick}} WHERE {{.Backtick}}id{{.Backtick}}=?"
-	}
+    if _, ok := ent.(entity.BaseEntity); ok {
+        query := "UPDATE {{.Backtick}}" + table + "{{.Backtick}} SET {{.Backtick}}deleted_at{{.Backtick}}=? WHERE {{.Backtick}}id{{.Backtick}}=?"
+        _, err = db.ExecContext(ctx, query, time.Now(), ent.GetID())
+        return
+    }
 
-	if ctx == nil {
-		_, err = db.Exec(sql, ent.GetID())
-	} else {
-		_, err = db.ExecContext(ctx, sql, ent.GetID())
-	}
-	return
+    query := "DELETE FROM {{.Backtick}}" + table + "{{.Backtick}} WHERE {{.Backtick}}id{{.Backtick}}=?"
+    _, err = db.ExecContext(ctx, query, ent.GetID())
+    return
 }
 
 func setID(ent entity.SimpleBaseEntity, id int64) {

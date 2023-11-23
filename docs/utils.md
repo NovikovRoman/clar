@@ -41,11 +41,7 @@ func save(ctx context.Context, db *sqlx.DB, table string, ent entity.SimpleBaseE
     }
 
     query := "UPDATE `" + table + "` SET " + fieldsForUpdate(ent) + " WHERE id=:id"
-    if ctx == nil {
-        _, err = db.NamedExec(query, ent)
-    } else {
-        _, err = db.NamedExecContext(ctx, query, ent)
-    }
+    _, err = db.NamedExecContext(ctx, query, ent)
     return
 }
 
@@ -90,12 +86,7 @@ func saveMultipleBase(ctx context.Context, db *sqlx.DB, table string, ignore boo
         }
     }
 
-    if ctx == nil {
-        _, err = db.Exec(query, args...)
-
-    } else {
-        _, err = db.ExecContext(ctx, query, args...)
-    }
+     _, err = db.ExecContext(ctx, query, args...)
     return
 }
 
@@ -189,11 +180,7 @@ func create(ctx context.Context, db *sqlx.DB, table string, ent entity.SimpleBas
 
     var res sql.Result
     query := "INSERT INTO `" + table + "` (" + set + ") VALUES (" + values + ")"
-    if ctx == nil {
-        res, err = db.NamedExec(query, ent)
-    } else {
-        res, err = db.NamedExecContext(ctx, query, ent)
-    }
+    res, err = db.NamedExecContext(ctx, query, ent)
 
     if err == nil {
         var id int64
@@ -223,18 +210,14 @@ func remove(ctx context.Context, db *sqlx.DB, table string, ent entity.SimpleBas
         return
     }
 
-    var sql string
     if _, ok := ent.(entity.BaseEntity); ok {
-        sql = "UPDATE `" + table + "` SET `deleted_at`=null WHERE `id`=?"
-    } else {
-        sql = "DELETE FROM `" + table + "` WHERE `id`=?"
+        query := "UPDATE `" + table + "` SET `deleted_at`=? WHERE `id`=?"
+        _, err = db.ExecContext(ctx, query, time.Now(), ent.GetID())
+        return
     }
 
-    if ctx == nil {
-        _, err = db.Exec(sql, ent.GetID())
-    } else {
-        _, err = db.ExecContext(ctx, sql, ent.GetID())
-    }
+    query := "DELETE FROM `" + table + "` WHERE `id`=?"
+    _, err = db.ExecContext(ctx, query, ent.GetID())
     return
 }
 
