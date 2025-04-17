@@ -1,16 +1,28 @@
 package main
 
 import (
+	"fmt"
 	"path/filepath"
+
+	"github.com/spf13/cobra"
 )
 
-func createMigrate(dbType *DBType, internal bool) (err error) {
-	path := ""
-	if internal {
-		path = dirInternal
+func migrateCmd(dbType string) *cobra.Command {
+	return &cobra.Command{
+		Use:   "migrate",
+		Aliases: []string{"m"},
+		Short: "Create migrate",
+		Args:  cobra.ExactArgs(1),
+		Run: func(cmd *cobra.Command, args []string) {
+			if err := createMigrate(dbType); err != nil {
+				fmt.Println(err)
+			}
+		},
 	}
+}
 
-	path = filepath.Join(path, dirMigrate, dbType.name)
+func createMigrate(dbType string) (err error) {
+	path := filepath.Join("internal", dirMigrate, dbType)
 	pathSql := filepath.Join(path, "migrations")
 	if err = createDir(pathSql); err != nil {
 		return

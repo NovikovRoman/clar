@@ -29,49 +29,46 @@ make && sudo mv bin/clar /usr/local/bin/
 #### Initialization
 
 ```shell script
-clar i [-d dbtype|--db=dbtype] [-i|--internal]
+clar i [-d dbtype|--db=dbtype]
 ```
 
 or
 
 ```shell script
-clar init [-d dbtype|--db=dbtype] [-i|--internal]
+clar init [-d dbtype|--db=dbtype]
 ```
 
 - `dbtype` - for what type of database (default: `mysql`).
-- `-i`, `--internal` - put the code in the `internal` directory.
 
 Will be created:
 
-- [domain/entity/base_entity.go](docs/base_entity.md)
+- [internal/db/mysql/entity/base_entity.go](docs/base_entity.md)
 
-- For MySQL: [domain/repository/mysql/utils.go](docs/utils.md)
+- For MySQL: [internal/db/mysql/repository/mysql/utils.go](docs/utils.md)
 
 #### Entity And Repository
 
 Creating a entity with repository.
 
 ```shell script
-clar e [-n name|--name=name] [-i|--internal]
+clar e name
 ```
 
 or
 
 ```shell script
-clar entity -n name|--name=name [-d dbtype|--db=dbtype] [-i|--internal] [-s|--simple] or [-e|--empty]
+clar entity name [-d dbtype|--db=dbtype] [-s|--simple] or [-e|--empty]
 ```
 
 - `name` - entity name (required).
 - `dbtype` - for what type of database (default: `mysql`).
 - `-s`, `--simple` - simple entity.
 - `-e`, `--empty` - empty entity.
-- `-i`, `--internal` - put the code in the `internal` directory.
 
-Will be created (example `clar i -nuser`):
+Will be created (example `clar e user`):
 
-- [`domain/repository/user_repository.go`](docs/user_repository_interface.md) or if the `-e` flag is specified [`user_repository.go`](docs/empty_user_repository_interface.md)
-- [`domain/repository/entity/user.go`](docs/user.md) or if the `-s` flag is specified [`user.go`](docs/simple_user.md) or if the `-e` flag is specified [`user.go`](docs/empty_user.md)
-- For MySQL: [domain/repository/mysql/user.go](docs/user_repository.md) or if the `-e` flag is specified [user.go](docs/empty_user_repository.md)
+- [`internal/db/mysql/entity/user.go`](docs/user.md) or if the `-s` flag is specified [`user.go`](docs/simple_user.md) or if the `-e` flag is specified [`user.go`](docs/empty_user.md)
+- For MySQL: [internal/db/mysql/repository/user.go](docs/user_repository.md) or if the `-e` flag is specified [user.go](docs/empty_user_repository.md)
 
 if there was no initialization, there will be automatic initialization for the selected database.
 
@@ -80,55 +77,52 @@ if there was no initialization, there will be automatic initialization for the s
 Creating an array structure for a json column.
 
 ```shell script
-clar a -n name|--name=name [-i|--internal]
+clar a name
 ```
 
 or
 
 ```shell script
-clar array -n name|--name=name [-i|--internal]
+clar array name
 ```
 
 - `name` - struct name (required).
-- `-i`, `--internal` - put the code in the `internal` directory.
 
-Will be created (example `clar i -nmyArr`) [`domain/entity/my_arr.go`](docs/my_arr.md).
+Will be created (example `clar i myArr`) [`internal/db/mysql/entity/my_arr.go`](docs/my_arr.md).
 
 #### Structure For JSON Columns
 
 Creating a structure for a json column.
 
 ```shell script
-clar s -n name|--name=name [-i|--internal]
+clar s name
 ```
 
 or
 
 ```shell script
-clar struct -n name|--name=name [-i|--internal]
+clar struct name
 ```
 
 - `name` - struct name (required).
-- `-i`, `--internal` - put the code in the `internal` directory.
 
-Will be created (example `clar i -nmyStruct`) [`domain/entity/my_struct.go`](docs/my_struct.md).
+Will be created (example `clar s myStruct`) [`internal/db/mysql/entity/my_struct.go`](docs/my_struct.md).
 
 #### Migration Tools
 
 Creating migration tools code.
 
 ```shell script
-clar m [-d dbtype|--db=dbtype] [-i|--internal]
+clar m [-d dbtype|--db=dbtype]
 ```
 
 or
 
 ```shell script
-clar migrate [-d dbtype|--db=dbtype] [-i|--internal]
+clar migrate [-d dbtype|--db=dbtype]
 ```
 
 - `dbtype` - for what type of database (default: `mysql`).
-- `-i`, `--internal` - put the code in the `internal` directory.
 
 Will be created (for MySQL):
 

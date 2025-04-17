@@ -1,22 +1,31 @@
 package mysql
 
-const EntityRepository = `package mysql
+const EntityRepository = `package repository
 
 import (
 	"context"
 	"database/sql"
 
-	"{{.Module}}/domain/entity"
-	"{{.Module}}/domain/repository"
+	"{{.Module}}/{{.DBType}}/entity"
 	"github.com/jmoiron/sqlx"
 )
+
+type {{.Entity}}Repository interface {
+	Table() string
+	GetByID(ctx context.Context, id int64) ({{.EntityName}} *entity.{{.Entity}}, err error)
+	Save(ctx context.Context, {{.EntityName}} *entity.{{.Entity}}) (err error)
+	SaveMultiple(ctx context.Context, {{.EntityName}} ...*entity.{{.Entity}}) error
+	SaveMultipleIgnoreDuplicates(ctx context.Context, {{.EntityName}} ...*entity.{{.Entity}}) error
+	Update(ctx context.Context, {{.EntityName}} *entity.{{.Entity}}) (err error)
+	Remove(ctx context.Context, {{.EntityName}} *entity.{{.Entity}}) (err error)
+}
 
 type {{.EntityName}}Repository struct {
 	table string
 	db    *sqlx.DB
 }
 
-func New{{.Entity}}Repository(db *sqlx.DB) repository.{{.Entity}}Repository {
+func New{{.Entity}}Repository(db *sqlx.DB) {{.Entity}}Repository {
 	return &{{.EntityName}}Repository{
 		table: "{{.EntityTable}}",
 		db:    db,
@@ -78,19 +87,22 @@ func (r *{{.EntityName}}Repository) Remove(ctx context.Context, {{.EntityName}} 
 }
 `
 
-const EmptyEntityRepository = `package mysql
+const EmptyEntityRepository = `package repository
 
 import (
-	"{{.Module}}/domain/repository"
 	"github.com/jmoiron/sqlx"
 )
+
+type {{.Entity}}Repository interface {
+	Table() string
+}
 
 type {{.EntityName}}Repository struct {
 	table string
 	db    *sqlx.DB
 }
 
-func New{{.Entity}}Repository(db *sqlx.DB) repository.{{.Entity}}Repository {
+func New{{.Entity}}Repository(db *sqlx.DB) {{.Entity}}Repository {
 	return &{{.EntityName}}Repository{
 		table: "{{.EntityTable}}",
 		db:    db,

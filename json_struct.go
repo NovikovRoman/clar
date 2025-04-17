@@ -1,15 +1,31 @@
 package main
 
 import (
+	"fmt"
 	"path/filepath"
 	"strings"
 
+	"github.com/spf13/cobra"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
 )
 
-func createJsonStruct(name string, internal bool) (err error) {
-	dirE := getPathLocation(dirEntity, internal)
+func jsonStructCmd(dbType string) *cobra.Command {
+	return &cobra.Command{
+		Use:     "struct [name]",
+		Aliases: []string{"s"},
+		Short:   "Create json struct",
+		Args:    cobra.ExactArgs(1),
+		Run: func(cmd *cobra.Command, args []string) {
+			if err := createJsonStruct(dbType, args[0]); err != nil {
+				fmt.Println(err)
+			}
+		},
+	}
+}
+
+func createJsonStruct(dbType, name string) (err error) {
+	dirE := getPathLocation(dbType, dirEntity)
 	if err = createDir(dirE); err != nil {
 		return
 	}

@@ -1,23 +1,34 @@
-# user_repository.go
+# Repository for User Entity
+
+`user.go`
 
 ```go
-package mysql
+package repository
 
 import (
     "context"
     "database/sql"
 
-    "github.com/NovikovRoman/clar/domain/entity"
-    "github.com/NovikovRoman/clar/domain/repository"
+    "github.com/NovikovRoman/clar/internal/db/mysql/entity"
     "github.com/jmoiron/sqlx"
 )
+
+type UserRepository interface {
+    Table() string
+    GetByID(ctx context.Context, id int64) (user *entity.User, err error)
+    Save(ctx context.Context, user *entity.User) (err error)
+    SaveMultiple(ctx context.Context, user ...*entity.User) error
+    SaveMultipleIgnoreDuplicates(ctx context.Context, user ...*entity.User) error
+    Update(ctx context.Context, user *entity.User) (err error)
+    Remove(ctx context.Context, user *entity.User) (err error)
+}
 
 type userRepository struct {
     table string
     db    *sqlx.DB
 }
 
-func NewUserRepository(db *sqlx.DB) repository.UserRepository {
+func NewUserRepository(db *sqlx.DB) UserRepository {
     return &userRepository{
         table: "users",
         db:    db,

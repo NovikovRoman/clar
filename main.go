@@ -3,9 +3,10 @@ package main
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"regexp"
 
-	"github.com/jessevdk/go-flags"
+	"github.com/spf13/cobra"
 )
 
 const (
@@ -13,76 +14,9 @@ const (
 	backtick = "`"
 )
 
-type initCommand struct {
-	DBType   string `long:"db" short:"d" description:"DB type." default:"mysql"`
-	Internal bool   `long:"internal" short:"i" description:"In internal directory"`
-}
-
-func (c initCommand) Execute(_ []string) (err error) {
-	var dbType *DBType
-	if dbType, err = newDBType(opts.Init.DBType); err != nil {
-		return
-	}
-	return initClar(dbType, opts.Init.Internal)
-}
-
-type arrayCommand struct {
-	Name     string `long:"name" short:"n" description:"Structure name." required:"true"`
-	Internal bool   `long:"internal" short:"i" description:"In internal directory"`
-}
-
-func (c arrayCommand) Execute(_ []string) error {
-	return createJsonArray(opts.Array.Name, opts.Array.Internal)
-}
-
-type structCommand struct {
-	Name     string `long:"name" short:"n" description:"Structure name." required:"true"`
-	Internal bool   `long:"internal" short:"i" description:"In internal directory"`
-}
-
-func (c structCommand) Execute(_ []string) error {
-	return createJsonStruct(opts.Struct.Name, opts.Struct.Internal)
-}
-
-type entityCommand struct {
-	Name     string `long:"name" short:"n" description:"Entity name." required:"true"`
-	DBType   string `long:"db" short:"d" description:"DB type." default:"mysql"`
-	Empty    bool   `long:"empty" short:"e" description:"Empty entity."`
-	Simple   bool   `long:"simple" short:"s" description:"Simple entity."`
-	Internal bool   `long:"internal" short:"i" description:"In internal directory"`
-}
-
-func (c entityCommand) Execute(_ []string) (err error) {
-	var dbType *DBType
-	if dbType, err = newDBType(opts.Entity.DBType); err != nil {
-		return
-	}
-	return createEntity(opts.Entity.Name, dbType,
-		opts.Entity.Empty, opts.Entity.Simple, opts.Entity.Internal)
-}
-
-type migrateCommand struct {
-	DBType   string `long:"db" short:"d" description:"DB type." default:"mysql"`
-	Internal bool   `long:"internal" short:"i" description:"In internal directory"`
-}
-
-func (c migrateCommand) Execute(_ []string) (err error) {
-	var dbType *DBType
-	if dbType, err = newDBType(opts.Migrate.DBType); err != nil {
-		return
-	}
-	return createMigrate(dbType, opts.Migrate.Internal)
-}
-
-var opts struct {
-	Init    initCommand    `command:"init" alias:"i" description:"Creates a model interface."`
-	Array   arrayCommand   `command:"array" alias:"a" description:"Creates a array structure template for json columns."`
-	Struct  structCommand  `command:"struct" alias:"s" description:"Creates a structure template for json columns."`
-	Entity  entityCommand  `command:"entity" alias:"e" description:"Creates a entity with a repository."`
-	Migrate migrateCommand `command:"migrate" alias:"m" description:"Generates code for migration."`
-}
-
-var modulePath string
+const (
+	dbMysql = "mysql"
+)
 
 func main() {
 	var err error
@@ -102,7 +36,34 @@ func main() {
 		fmt.Println("Module not found in go.mod.")
 		os.Exit(1)
 	}
-	modulePath = string(m[1])
+	modulePath := filepath.Join(string(m[1]), "internal", "db")
 
-	_, _ = flags.Parse(&opts)
+	rootCmd := &cobra.Command{
+		Use:   "clar [entity|struct|array|migrate]",
+		Short: "",
+	}
+
+	var dbType string
+	rootCmd.PersistentFlags().StringVarP(&dbType, "db", "d", dbMysql, "Database type")
+
+	migrateCmd := migrateCmd(dbType)
+	jsonStructCmd := jsonStructCmd(dbType)
+	jsonArrayCmd := jsonArrayCmd(dbType)
+	entityCmd := entityCmd(dbType, modulePath)
+
+	rootCmd.AddCommand(migrateCmd, jsonStructCmd, jsonArrayCmd, entityCmd)
+
+	if err = rootCmd.Execute(); err != nil {
+		fmt.Println(err)
+	}
+	if err = dbIsSupported(dbType); err != nil {
+		fmt.Println(err)
+	}
+}
+
+func dbIsSupported(dbType string) error {
+	if dbType == dbMysql {
+		return nil
+	}
+	return fmt.Errorf("Database type %s not supported", dbType)
 }

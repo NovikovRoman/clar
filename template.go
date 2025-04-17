@@ -13,25 +13,18 @@ func getTemplate(name string) string {
 	switch name {
 	case "interface":
 		return templates.BaseEntity
-
 	case "json_struct":
 		return templates.JsonStruct
 	case "json_array":
 		return templates.StringArray
-
-	case "repository.interface":
-		return templates.Repository
-	case "repository.interface.empty":
-		return templates.EmptyRepository
-
 	default:
 		return ""
 	}
 }
 
-func getTemplateByDBType(dbType *DBType, name string) string {
-	switch dbType.code {
-	case MysqlCode:
+func getTemplateByDBType(dbType string, name string) string {
+	switch dbType {
+	case dbMysql:
 		return getTemplateMysql(name)
 
 	default:

@@ -1,7 +1,7 @@
 # utils.go
 
 ```go
-package mysql
+package repository
 
 import (
     "context"
@@ -13,7 +13,7 @@ import (
     "time"
     "unsafe"
 
-    "github.com/NovikovRoman/clar/domain/entity"
+    "github.com/NovikovRoman/clar/internal/db/mysql/entity"
     "github.com/jmoiron/sqlx"
     "github.com/jmoiron/sqlx/reflectx"
 )

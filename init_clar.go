@@ -4,13 +4,13 @@ import (
 	"path/filepath"
 )
 
-func initClar(dbType *DBType, internal bool) (err error) {
-	dirE := getPathLocation(dirEntity, internal)
+func initClar(modulePath, dbType string) (err error) {
+	dirE := getPathLocation(dbType, dirEntity)
 	if err = createDir(dirE); err != nil {
 		return
 	}
-	dirR := getPathLocation(dirRepository, internal)
-	if err = createDir(filepath.Join(dirR, dbType.name)); err != nil {
+	dirR := getPathLocation(dbType, dirRepository)
+	if err = createDir(dirR); err != nil {
 		return
 	}
 
@@ -19,19 +19,16 @@ func initClar(dbType *DBType, internal bool) (err error) {
 		return
 	}
 
-	mPath := modulePath
-	if internal {
-		mPath = filepath.Join(mPath, "internal")
-	}
-
 	data := struct {
 		Backtick string
 		Module   string
+		DBType   string
 	}{
 		Backtick: backtick,
-		Module:   mPath,
+		Module:   modulePath,
+		DBType:   dbType,
 	}
-	filename = filepath.Join(dirR, dbType.name, "utils.go")
-	err = saveTemplate(filename, getTemplateByDBType(dbType, "repository.utils"), data)
+	err = saveTemplate(filepath.Join(dirR, "utils.go"),
+		getTemplateByDBType(dbType, "repository.utils"), data)
 	return
 }

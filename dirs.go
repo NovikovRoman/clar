@@ -6,9 +6,9 @@ import (
 )
 
 const (
-	dirInternal   = "internal"
-	dirEntity     = "domain/entity"
-	dirRepository = "domain/repository"
+	dirDB         = "db"
+	dirEntity     = "entity"
+	dirRepository = "repository"
 	dirMigrate    = "migrations"
 )
 
@@ -20,9 +20,6 @@ func createDir(dir string) (err error) {
 	return
 }
 
-func getPathLocation(path string, internal bool) string {
-	if internal {
-		return filepath.Join(dirInternal, path)
-	}
-	return path
+func getPathLocation(dbType, path string) string {
+	return filepath.Join("internal", dirDB, dbType, path)
 }

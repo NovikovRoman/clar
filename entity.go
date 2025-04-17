@@ -2,13 +2,53 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
 
+	"github.com/spf13/cobra"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
 )
+
+func entityCmd(dbType, modulePath string) *cobra.Command {
+	var (
+		empty  bool
+		simple bool
+	)
+	entityCmd := &cobra.Command{
+		Use:     "entity [name]",
+		Aliases: []string{"e"},
+		Short:   "Create entity",
+		Args:    cobra.ExactArgs(1),
+		PreRun: func(cmd *cobra.Command, args []string) {
+			if empty && simple {
+				fmt.Println("Error: Flags -s and -e cannot be used together")
+				os.Exit(1)
+			}
+		},
+		Run: func(cmd *cobra.Command, args []string) {
+			empty, err := cmd.Flags().GetBool("empty")
+			if err != nil {
+				fmt.Println(err)
+				return
+			}
+			simple, err := cmd.Flags().GetBool("simple")
+			if err != nil {
+				fmt.Println(err)
+				return
+			}
+			if err = createEntity(modulePath, dbType, args[0], empty, simple); err != nil {
+				fmt.Println(err)
+			}
+		},
+	}
+
+	entityCmd.Flags().BoolVarP(&empty, "empty", "e", false, "Create empty entity")
+	entityCmd.Flags().BoolVarP(&simple, "simple", "s", false, "Create simple entity")
+	return entityCmd
+}
 
 type entity struct {
 	structName string
@@ -42,26 +82,36 @@ func newEntity(name string) (ent *entity) {
 	return
 }
 
-func createEntity(name string, dbType *DBType, empty, simple, internal bool) (err error) {
+func createEntity(modulePath, dbType, name string, empty, simple bool) error {
 	ent := newEntity(name)
-	if err = initBasicEntityFiles(ent, dbType, empty, simple, internal); err != nil {
-		return
+	if err := createEntityFile(dbType, ent, empty, simple); err != nil {
+		return err
 	}
 
-	switch dbType.code {
-	case MysqlCode:
-		return createMysqlEntityFiles(ent, dbType, empty, internal)
+	switch dbType {
+	case dbMysql:
+		return createMysqlRepositoryFile(modulePath, dbType, ent, empty)
 	}
 
-	err = errors.New("Database type not supported.")
-	return
+	return errors.New("Database type not supported.")
 }
 
-func initBasicEntityFiles(ent *entity, dbType *DBType, empty, simple, internal bool) (err error) {
-	mPath := modulePath
-	if internal {
-		mPath = filepath.Join(modulePath, "internal")
+func createEntityFile(dbType string, ent *entity, empty, simple bool) error {
+	tmplEntity := "entity.normal"
+	if empty {
+		tmplEntity = "entity.empty"
+
+	} else if simple {
+		tmplEntity = "entity.simple"
 	}
+
+	entityFilename := ent.snakeName + ".go"
+
+	dirE := getPathLocation(dbType, dirEntity)
+	if err := createDir(dirE); err != nil {
+		return err
+	}
+
 	data := struct {
 		Module     string
 		Backtick   string
@@ -69,68 +119,38 @@ func initBasicEntityFiles(ent *entity, dbType *DBType, empty, simple, internal b
 		EntitySymb string
 		EntityName string
 	}{
-		Module:     mPath,
 		Backtick:   backtick,
 		Entity:     cases.Title(language.English, cases.NoLower).String(ent.name),
 		EntitySymb: ent.symb,
 		EntityName: ent.name,
 	}
-
-	tmplEntity := "entity.normal"
-	tmplRepository := "repository.interface"
-	if empty {
-		tmplEntity = "entity.empty"
-		tmplRepository = "repository.interface.empty"
-
-	} else if simple {
-		tmplEntity = "entity.simple"
-	}
-
-	entitityFilename := ent.snakeName + ".go"
-
-	dirE := getPathLocation(dirEntity, internal)
-	if err = createDir(dirE); err != nil {
-		return
-	}
-	filePath := filepath.Join(dirE, entitityFilename)
-	if err = saveTemplate(filePath, getTemplateByDBType(dbType, tmplEntity), data); err != nil {
-		return
-	}
-
-	dirR := getPathLocation(dirRepository, internal)
-	if err = createDir(dirR); err != nil {
-		return
-	}
-	filePath = filepath.Join(dirR, entitityFilename)
-	err = saveTemplate(filePath, getTemplate(tmplRepository), data)
-	return
+	filePath := filepath.Join(dirE, entityFilename)
+	return saveTemplate(filePath, getTemplateByDBType(dbType, tmplEntity), data)
 }
 
-func createMysqlEntityFiles(ent *entity, dbType *DBType, empty, internal bool) (err error) {
-	dirDbType := filepath.Join(getPathLocation(dirRepository, internal), dbType.name)
-	if _, err = os.Stat(dirDbType); os.IsNotExist(err) {
+func createMysqlRepositoryFile(modulePath, dbType string, ent *entity, empty bool) (err error) {
+	dirDbType := getPathLocation(dbType, dirRepository)
+	if _, err = os.Stat(filepath.Join(dirDbType, "utils.go")); os.IsNotExist(err) {
 		if err = createDir(dirDbType); err != nil {
 			return
 		}
 
-		if err = initClar(dbType, internal); err != nil {
+		if err = initClar(modulePath, dbType); err != nil {
 			return
 		}
 	}
 
-	mPath := modulePath
-	if internal {
-		mPath = filepath.Join(modulePath, "internal")
-	}
 	data := struct {
 		Module      string
+		DBType      string
 		Backtick    string
 		Table       string
 		Entity      string
 		EntityName  string
 		EntityTable string
 	}{
-		Module:      mPath,
+		Module:      modulePath,
+		DBType:      dbType,
 		Backtick:    backtick,
 		Table:       ent.table,
 		Entity:      ent.structName,

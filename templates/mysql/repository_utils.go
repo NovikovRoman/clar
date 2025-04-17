@@ -1,6 +1,6 @@
 package mysql
 
-const RepositoryUtils = `package mysql
+const RepositoryUtils = `package repository
 
 import (
 	"context"
@@ -12,7 +12,7 @@ import (
 	"time"
 	"unsafe"
 
-	"{{.Module}}/domain/entity"
+	"{{.Module}}/{{.DBType}}/entity"
 	"github.com/jmoiron/sqlx"
 	"github.com/jmoiron/sqlx/reflectx"
 )

@@ -8,6 +8,10 @@ import (
     "github.com/jmoiron/sqlx"
 )
 
+type UserRepository interface {
+    Table() string
+}
+
 type userRepository struct {
     table string
     db    *sqlx.DB
