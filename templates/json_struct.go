@@ -20,7 +20,7 @@ func ({{.StructSymb}} {{.Struct}}) String() string {
 	return string(b)
 }
 
-func ({{.StructSymb}} *{{.Struct}}) Scan(val interface{}) (err error) {
+func ({{.StructSymb}} *{{.Struct}}) Scan(val any) (err error) {
 	var value {{.Struct}}
 	switch v := val.(type) {
 	case []byte:

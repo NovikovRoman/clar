@@ -56,7 +56,7 @@ func (r *userRepository) GetByID(ctx context.Context, id int64) (user *entity.Us
 // - be sure to specify primaryKey (pkey) if present.
 // Example: ID int64 `db:"id" pkey:"true"`
 func (r *userRepository) SaveMultiple(ctx context.Context, user ...*entity.User) error {
-    items := make([]interface{}, len(user))
+    items := make([]any, len(user))
     for i, item := range user {
         items[i] = item
     }
@@ -68,7 +68,7 @@ func (r *userRepository) SaveMultiple(ctx context.Context, user ...*entity.User)
 // [!] Use with caution.
 // - for new entries, does not return an ID.
 func (r *userRepository) SaveMultipleIgnoreDuplicates(ctx context.Context, user ...*entity.User) error {
-    items := make([]interface{}, len(user))
+    items := make([]any, len(user))
     for i, item := range user {
         items[i] = item
     }

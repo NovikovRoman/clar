@@ -53,7 +53,7 @@ func (r *{{.EntityName}}Repository) GetByID(ctx context.Context, id int64) ({{.E
 // - be sure to specify primaryKey (pkey) if present.
 // Example: ID int64 {{.Backtick}}db:"id" pkey:"true"{{.Backtick}}
 func (r *{{.EntityName}}Repository) SaveMultiple(ctx context.Context, {{.EntityName}} ...*entity.{{.Entity}}) error {
-	items := make([]interface{}, len({{.EntityName}}))
+	items := make([]any, len({{.EntityName}}))
 	for i, item := range {{.EntityName}} {
 		items[i] = item
 	}
@@ -67,7 +67,7 @@ func (r *{{.EntityName}}Repository) SaveMultiple(ctx context.Context, {{.EntityN
 // - be sure to specify primaryKey (pkey) if present.
 // Example: ID int64 {{.Backtick}}db:"id" pkey:"true"{{.Backtick}}
 func (r *{{.EntityName}}Repository) SaveMultipleIgnoreDuplicates(ctx context.Context, {{.EntityName}} ...*entity.{{.Entity}}) error {
-	items := make([]interface{}, len({{.EntityName}}))
+	items := make([]any, len({{.EntityName}}))
 	for i, item := range {{.EntityName}} {
 		items[i] = item
 	}

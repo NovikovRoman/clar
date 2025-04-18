@@ -16,7 +16,7 @@ func (m MyArr) String() string {
     return string(b)
 }
 
-func (m *MyArr) Scan(val interface{}) (err error) {
+func (m *MyArr) Scan(val any) (err error) {
     switch v := val.(type) {
     case []byte:
         return json.Unmarshal(v, &m)

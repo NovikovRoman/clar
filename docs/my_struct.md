@@ -21,7 +21,7 @@ func (m MyStruct) String() string {
     return string(b)
 }
 
-func (m *MyStruct) Scan(val interface{}) (err error) {
+func (m *MyStruct) Scan(val any) (err error) {
     var value MyStruct
     switch v := val.(type) {
     case []byte:

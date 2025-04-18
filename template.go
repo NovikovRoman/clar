@@ -61,7 +61,7 @@ func getTemplateMysql(name string) string {
 }
 
 // saveTemplate creates a file from a template.
-func saveTemplate(filename string, tmpl string, data interface{}) (err error) {
+func saveTemplate(filename string, tmpl string, data any) (err error) {
 	var f *os.File
 
 	if _, err = os.Stat(filename); err == nil {
