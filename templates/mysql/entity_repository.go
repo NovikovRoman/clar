@@ -12,12 +12,12 @@ import (
 
 type {{.Entity}}Repository interface {
 	Table() string
-	GetByID(ctx context.Context, id int64) ({{.EntityName}} *entity.{{.Entity}}, err error)
-	Save(ctx context.Context, {{.EntityName}} *entity.{{.Entity}}) (err error)
+	ByID(ctx context.Context, id int64) (entity.{{.Entity}}, error)
+	Save(ctx context.Context, {{.EntityName}} *entity.{{.Entity}}) error
 	SaveMultiple(ctx context.Context, {{.EntityName}} ...*entity.{{.Entity}}) error
 	SaveMultipleIgnoreDuplicates(ctx context.Context, {{.EntityName}} ...*entity.{{.Entity}}) error
-	Update(ctx context.Context, {{.EntityName}} *entity.{{.Entity}}) (err error)
-	Remove(ctx context.Context, {{.EntityName}} *entity.{{.Entity}}) (err error)
+	Update(ctx context.Context, {{.EntityName}} *entity.{{.Entity}}) error
+	Remove(ctx context.Context, {{.EntityName}} *entity.{{.Entity}}) error
 }
 
 type {{.EntityName}}Repository struct {
@@ -36,14 +36,15 @@ func (r *{{.EntityName}}Repository) Table() string {
 	return r.table
 }
 
-func (r *{{.EntityName}}Repository) GetByID(ctx context.Context, id int64) ({{.EntityName}} *entity.{{.Entity}}, err error) {
-	{{.EntityName}} = &entity.{{.Entity}}{}
-	err = r.db.GetContext(ctx, {{.EntityName}}, "SELECT * FROM {{.Backtick}}"+r.table+"{{.Backtick}} WHERE {{.Backtick}}id{{.Backtick}} = ?", id)
+// start CLAR generation ---------------------------------------------------------------------------
+
+func (r *{{.EntityName}}Repository) ByID(ctx context.Context, id int64) (entity.{{.Entity}}, error) {
+	var {{.EntityName}} entity.{{.Entity}}
+	err := r.db.GetContext(ctx, &{{.EntityName}}, "SELECT * FROM {{.Backtick}}"+r.table+"{{.Backtick}} WHERE {{.Backtick}}id{{.Backtick}} = ?", id)
 	if err == sql.ErrNoRows {
-		err = nil
-		{{.EntityName}} = nil
+		return {{.EntityName}}, ErrNotFound
 	}
-	return
+	return {{.EntityName}}, err
 }
 
 // SaveMultiple saves multiple entries to the database. Adds new, updates existing entities.
@@ -85,6 +86,8 @@ func (r *{{.EntityName}}Repository) Update(ctx context.Context, {{.EntityName}} 
 func (r *{{.EntityName}}Repository) Remove(ctx context.Context, {{.EntityName}} *entity.{{.Entity}}) error {
 	return remove(ctx, r.db, r.table, {{.EntityName}})
 }
+
+// end CLAR generation -----------------------------------------------------------------------------
 `
 
 const EmptyEntityRepository = `package repository

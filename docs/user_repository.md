@@ -15,12 +15,12 @@ import (
 
 type UserRepository interface {
     Table() string
-    GetByID(ctx context.Context, id int64) (user *entity.User, err error)
-    Save(ctx context.Context, user *entity.User) (err error)
+    ByID(ctx context.Context, id int64) (*entity.User, error)
+    Save(ctx context.Context, user *entity.User) error
     SaveMultiple(ctx context.Context, user ...*entity.User) error
     SaveMultipleIgnoreDuplicates(ctx context.Context, user ...*entity.User) error
-    Update(ctx context.Context, user *entity.User) (err error)
-    Remove(ctx context.Context, user *entity.User) (err error)
+    Update(ctx context.Context, user *entity.User) error
+    Remove(ctx context.Context, user *entity.User) error
 }
 
 type userRepository struct {
@@ -39,14 +39,15 @@ func (r *userRepository) Table() string {
     return r.table
 }
 
-func (r *userRepository) GetByID(ctx context.Context, id int64) (user *entity.User, err error) {
-    user = &entity.User{}
-    err = r.db.GetContext(ctx, &user, "SELECT * FROM `"+r.table+"` WHERE `id` = ?", id)
+// start CLAR generation ---------------------------------------------------------------------------
+
+func (r *userRepository) ByID(ctx context.Context, id int64) (entity.User, error) {
+    var user entity.User
+    err := r.db.GetContext(ctx, &user, "SELECT * FROM `"+r.table+"` WHERE `id` = ?", id)
     if err == sql.ErrNoRows {
-        err = nil
-        user = nil
+       return nil, ErrNotFound
     }
-    return
+    return user, err
 }
 
 // SaveMultiple saves multiple entries to the database. Adds new, updates existing entities.
@@ -86,4 +87,6 @@ func (r *userRepository) Update(ctx context.Context, user *entity.User) error {
 func (r *userRepository) Remove(ctx context.Context, user *entity.User) error {
     return remove(ctx, r.db, r.table, user)
 }
+
+// end CLAR generation -----------------------------------------------------------------------------
 ```
