@@ -7,7 +7,6 @@ package repository
 
 import (
     "context"
-    "database/sql"
 
     "github.com/NovikovRoman/clar/internal/db/mysql/entity"
     "github.com/jmoiron/sqlx"
@@ -44,9 +43,6 @@ func (r *userRepository) Table() string {
 func (r *userRepository) ByID(ctx context.Context, id int64) (entity.User, error) {
     var user entity.User
     err := r.db.GetContext(ctx, &user, "SELECT * FROM `"+r.table+"` WHERE `id` = ?", id)
-    if err == sql.ErrNoRows {
-       return nil, ErrNotFound
-    }
     return user, err
 }
 

@@ -7,8 +7,6 @@ import (
 	"time"
 )
 
-var ErrNotFound error = errors.New("Entity not found")
-
 type SimpleBaseEntity interface {
 	GetID() int64
 }

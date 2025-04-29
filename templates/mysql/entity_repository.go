@@ -4,7 +4,6 @@ const EntityRepository = `package repository
 
 import (
 	"context"
-	"database/sql"
 
 	"{{.Module}}/{{.DBType}}/entity"
 	"github.com/jmoiron/sqlx"
@@ -41,9 +40,6 @@ func (r *{{.EntityName}}Repository) Table() string {
 func (r *{{.EntityName}}Repository) ByID(ctx context.Context, id int64) (entity.{{.Entity}}, error) {
 	var {{.EntityName}} entity.{{.Entity}}
 	err := r.db.GetContext(ctx, &{{.EntityName}}, "SELECT * FROM {{.Backtick}}"+r.table+"{{.Backtick}} WHERE {{.Backtick}}id{{.Backtick}} = ?", id)
-	if err == sql.ErrNoRows {
-		return {{.EntityName}}, ErrNotFound
-	}
 	return {{.EntityName}}, err
 }
 
