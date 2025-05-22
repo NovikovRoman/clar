@@ -284,6 +284,9 @@ func fieldsForUpdate(ent any) (set string) {
 func tableFields(ent any) (fields []string) {
 	m := reflectx.NewMapperFunc(tagName, func(s string) string { return s })
 	for _, n := range m.TypeMap(reflect.TypeOf(ent)).Names {
+		if n.Field.Tag.Get("readonly") == "true" {
+			continue
+		}
 		if len(n.Index) == 1 {
 			fields = append(fields, n.Path)
 		}
