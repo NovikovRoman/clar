@@ -1,7 +1,6 @@
 package main
 
 import (
-	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -12,7 +11,7 @@ import (
 	"golang.org/x/text/language"
 )
 
-func entityCmd(dbType, modulePath string) *cobra.Command {
+func entityCmd() *cobra.Command {
 	var (
 		empty  bool
 		simple bool
@@ -39,7 +38,21 @@ func entityCmd(dbType, modulePath string) *cobra.Command {
 				fmt.Println(err)
 				return
 			}
-			if err = createEntity(modulePath, dbType, args[0], empty, simple); err != nil {
+
+			ent := newEntity(args[0], empty, simple)
+			if err = ent.create(); err != nil {
+				fmt.Println(err)
+			}
+			if err = ent.createModel(); err != nil {
+				fmt.Println(err)
+			}
+			if err = save("internal/db/utils.go", "templates/db.utils.tmpl", nil); err != nil {
+				fmt.Println(err)
+			}
+			if err = createConnection(); err != nil {
+				fmt.Println(err)
+			}
+			if err = createRepo(ent); err != nil {
 				fmt.Println(err)
 			}
 		},
@@ -57,12 +70,17 @@ type entity struct {
 	table      string
 	nameRunes  []rune
 	symb       string
+
+	empty  bool
+	simple bool
 }
 
-func newEntity(name string) (ent *entity) {
+func newEntity(name string, empty, simple bool) (ent *entity) {
 	ent = &entity{
 		nameRunes: []rune(name),
 		snakeName: toSnake(name),
+		empty:     empty,
+		simple:    simple,
 	}
 	ent.symb = strings.ToLower(string(ent.nameRunes[0]))
 	ent.name = strings.ToLower(string(ent.nameRunes[0])) + string(ent.nameRunes[1:])
@@ -82,88 +100,63 @@ func newEntity(name string) (ent *entity) {
 	return
 }
 
-func createEntity(modulePath, dbType, name string, empty, simple bool) error {
-	ent := newEntity(name)
-	if err := createEntityFile(dbType, ent, empty, simple); err != nil {
-		return err
-	}
-
-	switch dbType {
-	case dbMysql:
-		return createMysqlRepositoryFile(modulePath, dbType, ent, empty)
-	}
-
-	return errors.New("Database type not supported.")
-}
-
-func createEntityFile(dbType string, ent *entity, empty, simple bool) error {
-	tmplEntity := "entity.normal"
-	if empty {
+func (ent *entity) create() error {
+	tmplEntity := "entity"
+	if ent.empty {
 		tmplEntity = "entity.empty"
 
-	} else if simple {
+	} else if ent.simple {
 		tmplEntity = "entity.simple"
 	}
 
 	entityFilename := ent.snakeName + ".go"
 
-	dirE := getPathLocation(dbType, dirEntity)
-	if err := createDir(dirE); err != nil {
+	dir := filepath.Join("internal/db", db, "entity")
+	if err := createDir(dir); err != nil {
 		return err
 	}
 
 	data := struct {
-		Module     string
-		Backtick   string
-		Entity     string
-		EntitySymb string
-		EntityName string
+		ImportModels string
+		Entity       string
+		EntitySymb   string
+		EntityName   string
 	}{
-		Backtick:   backtick,
-		Entity:     cases.Title(language.English, cases.NoLower).String(ent.name),
-		EntitySymb: ent.symb,
-		EntityName: ent.name,
+		ImportModels: filepath.Join(modulePath, "internal/domain/models"),
+		Entity:       ent.structName,
+		EntitySymb:   ent.symb,
+		EntityName:   ent.name,
 	}
-	filePath := filepath.Join(dirE, entityFilename)
-	return saveTemplate(filePath, getTemplateByDBType(dbType, tmplEntity), data)
+	return save(filepath.Join(dir, entityFilename), "templates/"+tmplEntity+".tmpl", data)
 }
 
-func createMysqlRepositoryFile(modulePath, dbType string, ent *entity, empty bool) (err error) {
-	dirDbType := getPathLocation(dbType, dirRepository)
-	if _, err = os.Stat(filepath.Join(dirDbType, "utils.go")); os.IsNotExist(err) {
-		if err = createDir(dirDbType); err != nil {
-			return
-		}
+func (ent *entity) createModel() error {
+	if ent.empty {
+		return nil
+	}
+	tmplModel := "model"
+	if ent.simple {
+		tmplModel = "model.simple"
+	}
 
-		if err = initClar(modulePath, dbType); err != nil {
-			return
+	dir := "internal/domain/models"
+	if err := createDir(dir); err != nil {
+		return err
+	}
+
+	fileErr := filepath.Join(dir, "errors.go")
+	if fileNotExists(fileErr) {
+		if err := save(fileErr, "templates/models.errors.tmpl", nil); err != nil {
+			return err
 		}
 	}
 
 	data := struct {
-		Module      string
-		DBType      string
-		Backtick    string
-		Table       string
-		Entity      string
-		EntityName  string
-		EntityTable string
+		Entity     string
+		EntitySymb string
 	}{
-		Module:      modulePath,
-		DBType:      dbType,
-		Backtick:    backtick,
-		Table:       ent.table,
-		Entity:      ent.structName,
-		EntityName:  ent.name,
-		EntityTable: ent.table,
+		Entity:     ent.structName,
+		EntitySymb: ent.symb,
 	}
-
-	tmpl := "repository.entity"
-	if empty {
-		tmpl = "repository.empty.entity"
-	}
-
-	filePath := filepath.Join(dirDbType, ent.snakeName+".go")
-	err = saveTemplate(filePath, getTemplateByDBType(dbType, tmpl), data)
-	return
+	return save(filepath.Join(dir, ent.snakeName+".go"), "templates/"+tmplModel+".tmpl", data)
 }

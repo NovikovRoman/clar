@@ -1,0 +1,212 @@
+package repositories
+
+import (
+	"context"
+	"reflect"
+	"time"
+	"unsafe"
+
+	"github.com/jmoiron/sqlx"
+	"github.com/jmoiron/sqlx/reflectx"
+)
+
+type IDType interface {
+	int | int32 | int64 | string
+}
+
+type simpleBaseEntity[T IDType] interface {
+	GetID() T
+}
+
+type baseEntity[T IDType] interface {
+	simpleBaseEntity[T]
+
+	GetCreatedAt() time.Time
+	GetUpdatedAt() time.Time
+	GetDeletedAt() *time.Time
+}
+
+const (
+	tagName          = "db"
+	tagReadOnly      = "readonly"
+	tagAutoincrement = "autoincrement"
+)
+
+func emptyID[T IDType](ent simpleBaseEntity[T]) bool {
+	id := ent.GetID()
+	switch v := any(id).(type) {
+	case string:
+		return v == ""
+	case int:
+	case int32:
+	case int64:
+		return v <= 0
+	}
+	return true
+}
+
+// save saves the record to the DB.
+//
+// New record - creates in a DB, existing - updates in a DB. If the entry:
+//
+//   - domain.SimpleBaseEntity regular update of a record in the DB.
+//
+//   - domain.BaseEntity regular update of the record in the DB and the auto-update of the date
+//     in the UpdatedAt field.
+func save[T IDType](ctx context.Context, db *sqlx.DB, table string, ent simpleBaseEntity[T]) (err error) {
+	if emptyID(ent) {
+		return create(ctx, db, table, ent)
+	}
+
+	if v, ok := ent.(baseEntity[T]); ok {
+		setUpdatedAt(v, time.Now())
+	}
+
+	query := "UPDATE " + table + " SET " + fieldsForUpdate(ent) + " WHERE id=:id"
+	_, err = db.NamedExecContext(ctx, query, ent)
+	return
+}
+
+// create creates a record in the DB.
+//
+// If the entry:
+//
+//   - domain.SimpleBaseEntity the usual creation of a record in the DB.
+//
+//   - domain.BaseEntity the usual creation of a record in the DB, setting CreatedAt to the current time,
+//     UpdatedAt if not set - to the current time, DeletedAt if not set - nil.
+func create[T IDType](ctx context.Context, db *sqlx.DB, table string, ent simpleBaseEntity[T]) (err error) {
+	if !emptyID(ent) {
+		return save(ctx, db, table, ent)
+	}
+
+	if vEnt, ok := ent.(baseEntity[T]); ok {
+		if vEnt.GetCreatedAt().IsZero() {
+			setCreatedAt(vEnt, time.Now())
+		}
+		if vEnt.GetUpdatedAt().IsZero() {
+			setUpdatedAt(vEnt, time.Now())
+		}
+		if vEnt.GetDeletedAt() != nil && vEnt.GetDeletedAt().IsZero() {
+			setDeletedAt(vEnt, nil)
+		}
+	}
+
+	set, values := fieldsForInsert(ent)
+
+	nameID := ""
+	dbNameID := ""
+	m := reflectx.NewMapperFunc(tagAutoincrement, func(s string) string { return s })
+	for _, n := range m.TypeMap(reflect.TypeOf(ent)).Names {
+		if n.Field.Tag.Get(tagAutoincrement) != "true" {
+			continue
+		}
+		dbNameID = n.Field.Tag.Get(tagName)
+		nameID = n.Field.Name
+		break
+	}
+
+	if nameID == "" {
+		query := "INSERT INTO " + table + " (" + set + ") VALUES (" + values + ")"
+		_, err = db.NamedExecContext(ctx, query, ent)
+		return
+	}
+
+	var rows *sqlx.Rows
+	query := "INSERT INTO " + table + " (" + set + ") VALUES (" + values + ") RETURNING " + dbNameID
+	if rows, err = db.NamedQueryContext(ctx, query, ent); err != nil {
+		return
+	}
+	defer rows.Close()
+	if !rows.Next() {
+		return
+	}
+
+	var id any
+	if err = rows.Scan(&id); err != nil {
+		return
+	}
+
+	v := reflect.ValueOf(ent)
+	if v.Kind() == reflect.Ptr {
+		v = v.Elem()
+	}
+	switch newID := id.(type) {
+	case int:
+		v.FieldByName(nameID).SetInt(int64(newID))
+	case int32:
+		v.FieldByName(nameID).SetInt(int64(newID))
+	case int64:
+		v.FieldByName(nameID).SetInt(newID)
+	case string:
+		v.FieldByName(nameID).SetString(newID)
+	}
+	return
+}
+
+func setCreatedAt[T IDType](ent baseEntity[T], t time.Time) {
+	v := reflect.ValueOf(ent)
+	if v.Kind() == reflect.Ptr {
+		v = v.Elem()
+	}
+	v.FieldByName("CreatedAt").Set(reflect.ValueOf(t))
+}
+
+func setUpdatedAt[T IDType](ent baseEntity[T], t time.Time) {
+	v := reflect.ValueOf(ent)
+	if v.Kind() == reflect.Ptr {
+		v = v.Elem()
+	}
+	v.FieldByName("UpdatedAt").Set(reflect.ValueOf(t))
+}
+
+func setDeletedAt[T IDType](ent baseEntity[T], t *time.Time) {
+	v := reflect.ValueOf(ent)
+	if v.Kind() == reflect.Ptr {
+		v = v.Elem()
+	}
+
+	if t != nil {
+		v.FieldByName("DeletedAt").SetPointer(unsafe.Pointer(t))
+		return
+	}
+	v.FieldByName("DeletedAt").SetPointer(nil)
+}
+
+func fieldsForInsert(ent any) (set string, values string) {
+	for i, name := range tableFields(ent, true) {
+		if i > 0 {
+			set += ","
+			values += ","
+		}
+		set += "" + name + ""
+		values += ":" + name
+	}
+	return
+}
+
+func fieldsForUpdate(ent any) (set string) {
+	for i, name := range tableFields(ent, false) {
+		if i > 0 {
+			set += ","
+		}
+		set += "" + name + "=:" + name
+	}
+	return
+}
+
+func tableFields(ent any, forInsert bool) (fields []string) {
+	m := reflectx.NewMapperFunc(tagName, func(s string) string { return s })
+	for _, n := range m.TypeMap(reflect.TypeOf(ent)).Names {
+		if n.Field.Tag.Get(tagReadOnly) == "true" {
+			continue
+		}
+		if forInsert && n.Field.Tag.Get(tagAutoincrement) == "true" {
+			continue
+		}
+		if len(n.Index) == 1 {
+			fields = append(fields, n.Path)
+		}
+	}
+	return
+}

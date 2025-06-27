@@ -10,23 +10,23 @@ import (
 	"golang.org/x/text/language"
 )
 
-func jsonArrayCmd(dbType string) *cobra.Command {
+func jsonArrayCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:     "array [name]",
 		Aliases: []string{"a"},
 		Short:   "Create json array",
 		Args:    cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
-			if err := createJsonArray(dbType, args[0]); err != nil {
+			if err := createJsonArray(args[0]); err != nil {
 				fmt.Println(err)
 			}
 		},
 	}
 }
 
-func createJsonArray(dbType, name string) (err error) {
-	dirE := getPathLocation(dbType, dirEntity)
-	if err = createDir(dirE); err != nil {
+func createJsonArray(name string) (err error) {
+	dir := "internal/domain/models"
+	if err = createDir(dir); err != nil {
 		return
 	}
 
@@ -37,8 +37,5 @@ func createJsonArray(dbType, name string) (err error) {
 		Struct:     cases.Title(language.English, cases.NoLower).String(name),
 		StructSymb: strings.ToLower(string([]rune(name)[0])),
 	}
-
-	filename := filepath.Join(dirE, toSnake(name)+".go")
-	err = saveTemplate(filename, getTemplate("json_array"), data)
-	return
+	return save(filepath.Join(dir, toSnake(name)+".go"), "templates/json_array.tmpl", data)
 }

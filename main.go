@@ -1,21 +1,32 @@
 package main
 
 import (
+	"embed"
+	"errors"
 	"fmt"
+	"io/fs"
 	"os"
-	"path/filepath"
 	"regexp"
+	"text/template"
 
 	"github.com/spf13/cobra"
 )
 
 const (
-	permDir  = 0755
-	backtick = "`"
+	permDir = 0755
 )
 
 const (
-	dbMysql = "mysql"
+	dbMysql    = "mysql"
+	dbPostgres = "pg"
+)
+
+//go:embed templates/*
+var embeddedFiles embed.FS
+
+var (
+	db         string = dbPostgres // default database type is postgres
+	modulePath string
 )
 
 func main() {
@@ -36,34 +47,65 @@ func main() {
 		fmt.Println("Module not found in go.mod.")
 		os.Exit(1)
 	}
-	modulePath := filepath.Join(string(m[1]), "internal", "db")
 
 	rootCmd := &cobra.Command{
 		Use:   "clar [entity|struct|array|migrate]",
 		Short: "",
 	}
+	rootCmd.PersistentFlags().StringVarP(&db, "db", "d", "pg", "Database type")
 
-	var dbType string
-	rootCmd.PersistentFlags().StringVarP(&dbType, "db", "d", dbMysql, "Database type")
+	modulePath = string(m[1])
+	migrateCmd := migrateCmd()
+	entityCmd := entityCmd()
+	jsonArrayCmd := jsonArrayCmd()
+	jsonStructCmd := jsonStructCmd()
 
-	migrateCmd := migrateCmd(dbType)
-	jsonStructCmd := jsonStructCmd(dbType)
-	jsonArrayCmd := jsonArrayCmd(dbType)
-	entityCmd := entityCmd(dbType, modulePath)
-
-	rootCmd.AddCommand(migrateCmd, jsonStructCmd, jsonArrayCmd, entityCmd)
+	rootCmd.AddCommand(migrateCmd, entityCmd, jsonArrayCmd, jsonStructCmd)
 
 	if err = rootCmd.Execute(); err != nil {
 		fmt.Println(err)
+		os.Exit(1)
 	}
-	if err = dbIsSupported(dbType); err != nil {
-		fmt.Println(err)
+
+	if db != dbMysql && db != dbPostgres {
+		fmt.Printf("Database type %s not supported\n", db)
+		os.Exit(1)
 	}
 }
 
-func dbIsSupported(dbType string) error {
-	if dbType == dbMysql {
-		return nil
+// createDir creates a directory if it does not exist.
+func createDir(dir string) (err error) {
+	if fileNotExists(dir) {
+		err = os.MkdirAll(dir, permDir)
 	}
-	return fmt.Errorf("Database type %s not supported", dbType)
+	return
+}
+
+func fileNotExists(filepath string) bool {
+	_, err := os.Stat(filepath)
+	return os.IsNotExist(err)
+}
+
+func save(filename, tmpl string, data any) error {
+	b, err := fs.ReadFile(embeddedFiles, tmpl)
+	if err != nil {
+		return err
+	}
+	return saveTemplate2(filename, b, data)
+}
+
+// saveTemplate creates a file from a template.
+func saveTemplate2(filename string, tmpl []byte, data any) error {
+	var f *os.File
+	if _, err := os.Stat(filename); err == nil {
+		return errors.New(filename + " file exists.")
+	}
+	f, err := os.Create(filename)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		_ = f.Close()
+	}()
+	return template.Must(template.New("").Parse(string(tmpl))).Execute(f, data)
 }

@@ -1,0 +1,12 @@
+CREATE TABLE IF NOT EXISTS users
+(
+    id         bigint(20)                              NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    host       varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL UNIQUE,
+    success    boolean                                 NOT NULL,
+
+    created_at datetime                                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at datetime                                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted_at datetime                                         DEFAULT NULL
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4
+  COLLATE = utf8mb4_unicode_ci;

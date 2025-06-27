@@ -1,0 +1,73 @@
+package mysql
+
+import (
+	"context"
+	"database/sql"
+	"errors"
+	"fmt"
+	"os"
+	"strconv"
+	"strings"
+	"time"
+
+	migrate "{{.ModulePath}}/migrations/mysql"
+	_ "github.com/go-sql-driver/mysql"
+	"github.com/jmoiron/sqlx"
+)
+
+func Connect(ctx context.Context) (*sqlx.DB, error) {
+	db, err := sqlx.Connect("mysql", os.Getenv("DATABASE_URL"))
+	if err != nil {
+		return nil, fmt.Errorf("db: %w", err)
+	}
+
+	db.SetMaxOpenConns(20)
+	db.SetMaxIdleConns(2)
+	db.SetConnMaxLifetime(time.Minute)
+
+	if err = isolation(ctx, db); err != nil {
+		return nil, fmt.Errorf("db isolation: %w", err)
+	}
+
+	step, _ := strconv.Atoi(strings.TrimSpace(os.Getenv("MIGRATE_STEP")))
+	force := strings.TrimSpace(os.Getenv("MIGRATE_FORCE")) != ""
+
+	if os.Getenv("MIGRATE_DOWN") != "" {
+		if err = migrate.MigrationDown(db.DB, "migrations", step, force); err != nil {
+			err = fmt.Errorf("migrate: %w", err)
+		}
+		return db, err
+	}
+
+	if err = migrate.MigrationUp(db.DB, "migrations", step, force); err != nil {
+		err = fmt.Errorf("migrate: %w", err)
+	}
+	return db, err
+}
+
+func TxBegin(ctx context.Context, db *sqlx.DB) (*sqlx.Tx, error) {
+	tx, err := db.BeginTxx(ctx, &sql.TxOptions{Isolation: sql.LevelSerializable})
+	if err != nil {
+		return nil, fmt.Errorf("txBegin: %w", err)
+	}
+	return tx, nil
+}
+
+func TxRollback(tx *sqlx.Tx, err error) error {
+	if e := tx.Rollback(); e != nil {
+		err = errors.Join(err, fmt.Errorf("txRollback: %w", e))
+	}
+	return err
+}
+
+func isolation(ctx context.Context, db *sqlx.DB) error {
+	opts := &sql.TxOptions{
+		Isolation: sql.LevelSerializable,
+		ReadOnly:  false,
+	}
+	tx, err := db.BeginTxx(ctx, opts)
+	if err != nil {
+		return err
+	}
+	return tx.Commit()
+}

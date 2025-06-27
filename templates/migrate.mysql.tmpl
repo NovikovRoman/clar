@@ -1,7 +1,5 @@
 package mysql
 
-const Migrate = `package mysql
-
 import (
 	"database/sql"
 	"errors"
@@ -89,4 +87,3 @@ func MigrationDown(db *sql.DB, path string, step int, force bool) (err error) {
 	}
 	return
 }
-`

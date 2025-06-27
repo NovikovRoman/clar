@@ -1,0 +1,27 @@
+package repositories
+
+import (
+	"context"
+	"database/sql"
+	"errors"
+
+	"{{.ModulePath}}/internal/db/{{.DbType}}/entity"
+	"{{.ModulePath}}/internal/domain/models"
+	"github.com/jmoiron/sqlx"
+)
+
+type {{.EntityName}}Repository struct {
+	table string
+	db    *sqlx.DB
+}
+
+func New{{.Entity}}Repository(db *sqlx.DB) *{{.EntityName}}Repository {
+	return &{{.EntityName}}Repository{
+		table: "{{.EntityTable}}",
+		db:    db,
+	}
+}
+
+func (r {{.EntityName}}Repository) Table() string {
+	return r.table
+}

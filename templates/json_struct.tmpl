@@ -1,6 +1,4 @@
-package templates
-
-const JsonStruct = `package entity
+package models
 
 import (
 	"bytes"
@@ -56,4 +54,3 @@ func ({{.StructSymb}} {{.Struct}}) ConvertValue() (string, error) {
 	}
 	return string(b), nil
 }
-`

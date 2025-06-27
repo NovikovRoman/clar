@@ -7,44 +7,33 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func migrateCmd(dbType string) *cobra.Command {
+func migrateCmd() *cobra.Command {
 	return &cobra.Command{
-		Use:   "migrate",
+		Use:     "migrate",
 		Aliases: []string{"m"},
-		Short: "Create migrate",
-		Args:  cobra.ExactArgs(1),
+		Short:   "Create migrate",
+		Args:    cobra.ExactArgs(0),
 		Run: func(cmd *cobra.Command, args []string) {
-			if err := createMigrate(dbType); err != nil {
+			if err := createMigrate(); err != nil {
 				fmt.Println(err)
 			}
 		},
 	}
 }
 
-func createMigrate(dbType string) (err error) {
-	path := filepath.Join("internal", dirMigrate, dbType)
+func createMigrate() error {
+	path := filepath.Join("migrations", string(db))
 	pathSql := filepath.Join(path, "migrations")
-	if err = createDir(pathSql); err != nil {
-		return
+	if err := createDir(pathSql); err != nil {
+		return err
 	}
-
-	data := struct {
-		Backtick string
-	}{
-		Backtick: backtick,
+	if err := save(path+"/migrate.go", "templates/migrate."+db+".tmpl", nil); err != nil {
+		return err
 	}
-
-	if err = saveTemplate(path+"/migrate.go", getTemplateByDBType(dbType, "migrate"), data); err != nil {
-		return
-	}
-
-	err = saveTemplate(
-		filepath.Join(pathSql, "202205041600_begin.up.sql"), getTemplateByDBType(dbType, "migrate.up"), data)
+	err := save(filepath.Join(pathSql, "202205041600_begin.up.sql"), "templates/migrate.up."+db+".tmpl", nil)
 	if err != nil {
-		return
+		return err
 	}
-
-	err = saveTemplate(
-		filepath.Join(pathSql, "202205041600_begin.down.sql"), getTemplateByDBType(dbType, "migrate.down"), data)
-	return
+	err = save(filepath.Join(pathSql, "202205041600_begin.down.sql"), "templates/migrate.down.tmpl", nil)
+	return err
 }

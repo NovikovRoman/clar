@@ -1,0 +1,12 @@
+package repository
+
+import (
+	"context"
+
+	"{{.ModulePath}}/internal/domain/models"
+)
+
+type {{.Entity}} interface {
+	ByID(ctx context.Context, id int64) (models.{{.Entity}}, error)
+	Save(ctx context.Context, {{.EntityName}} *models.{{.Entity}}) error
+}

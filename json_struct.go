@@ -10,23 +10,23 @@ import (
 	"golang.org/x/text/language"
 )
 
-func jsonStructCmd(dbType string) *cobra.Command {
+func jsonStructCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:     "struct [name]",
 		Aliases: []string{"s"},
 		Short:   "Create json struct",
 		Args:    cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
-			if err := createJsonStruct(dbType, args[0]); err != nil {
+			if err := createJsonStruct(args[0]); err != nil {
 				fmt.Println(err)
 			}
 		},
 	}
 }
 
-func createJsonStruct(dbType, name string) (err error) {
-	dirE := getPathLocation(dbType, dirEntity)
-	if err = createDir(dirE); err != nil {
+func createJsonStruct(name string) (err error) {
+	dir := "internal/domain/models"
+	if err = createDir(dir); err != nil {
 		return
 	}
 
@@ -37,8 +37,5 @@ func createJsonStruct(dbType, name string) (err error) {
 		Struct:     cases.Title(language.English, cases.NoLower).String(name),
 		StructSymb: strings.ToLower(string([]rune(name)[0])),
 	}
-
-	filename := filepath.Join(dirE, toSnake(name)+".go")
-	err = saveTemplate(filename, getTemplate("json_struct"), data)
-	return
+	return save(filepath.Join(dir, toSnake(name)+".go"), "templates/json_struct.tmpl", data)
 }

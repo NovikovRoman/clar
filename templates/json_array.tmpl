@@ -1,6 +1,4 @@
-package templates
-
-const StringArray = `package entity
+package models
 
 import (
 	"database/sql/driver"
@@ -31,4 +29,3 @@ func ({{.StructSymb}} *{{.Struct}}) Scan(val any) (err error) {
 func ({{.StructSymb}} {{.Struct}}) Value() (driver.Value, error) {
 	return json.Marshal({{.StructSymb}})
 }
-`

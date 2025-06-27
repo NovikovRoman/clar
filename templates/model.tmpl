@@ -1,0 +1,14 @@
+package models
+
+import (
+	"time"
+)
+
+// {{.Entity}} model structure.
+type {{.Entity}} struct {
+	ID int64
+
+	CreatedAt time.Time
+	UpdatedAt time.Time
+	DeletedAt *time.Time
+}
