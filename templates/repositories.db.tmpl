@@ -14,5 +14,5 @@ func New(db *sqlx.DB) repository.Repositories {
 }
 
 func (r repositories) {{.Entity}}() repository.{{.Entity}} {
-	return NewUserRepository(r.db)
+	return New{{.Entity}}Repository(r.db)
 }
