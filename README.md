@@ -39,9 +39,9 @@ clar entity name [-d dbtype|--db=dbtype] [-s|--simple] or [-e|--empty]
 ```
 
 - `name` - entity name (required).
-- `dbtype` - for what type of database (default: `pg` postgreSQL).
+- `dbtype` - for what type of database (`mysql` or `pg`, default: `pg`).
 - `-s`, `--simple` - simple entity (ID only).
-- `-e`, `--empty` - empty entity (Without fields).
+- `-e`, `--empty` - empty entity (without fields).
 
 if migration tools were missing, they will be created.
 

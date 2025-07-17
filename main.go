@@ -52,7 +52,7 @@ func main() {
 		Use:   "clar [entity|struct|array|migrate]",
 		Short: "",
 	}
-	rootCmd.PersistentFlags().StringVarP(&db, "db", "d", "pg", "Database type")
+	rootCmd.PersistentFlags().StringVarP(&db, "db", "d", "pg", "Database type: mysql or pg")
 
 	modulePath = string(m[1])
 	migrateCmd := migrateCmd()
