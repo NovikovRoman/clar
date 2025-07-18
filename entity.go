@@ -88,7 +88,7 @@ func newEntity(name string, empty, simple bool) (ent *entity) {
 
 	ent.table = ent.snakeName
 	switch []rune(ent.table)[len(ent.table)-1] {
-	case 's':
+	case 's', 'x', 'h':
 		ent.table += "es"
 
 	case 'y':
