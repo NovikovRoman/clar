@@ -52,11 +52,9 @@ func entityCmd() *cobra.Command {
 			if err = createService(ent); err != nil {
 				fmt.Println(err)
 			}
-			/* if err = save("internal/domain/db/utils.go", "templates/db.utils.tmpl", nil); err != nil {
+			if err = createFactory(); err != nil {
 				fmt.Println(err)
-			} */
-			/*
-			 */
+			}
 		},
 	}
 

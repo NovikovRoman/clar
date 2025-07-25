@@ -1,0 +1,11 @@
+package factory
+
+type Services struct {
+	repos *Repositories
+}
+
+func NewServices(repos *Repositories) *Services {
+	return &Services{
+		repos: repos,
+	}
+}

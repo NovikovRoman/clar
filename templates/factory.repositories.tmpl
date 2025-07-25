@@ -1,0 +1,13 @@
+package factory
+
+import (
+    "github.com/jmoiron/sqlx"
+)
+
+type Repositories struct {
+	db *sqlx.DB
+}
+
+func NewRepositories(db *sqlx.DB) *Repositories {
+	return &Repositories{db: db}
+}

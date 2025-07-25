@@ -14,6 +14,13 @@ func createConnection() error {
 		}
 	}
 
+	fileUtils := "internal/domain/db/utils.go"
+	if fileNotExists(fileUtils) {
+		if err := save(fileUtils, "templates/db.utils.tmpl", nil); err != nil {
+			return err
+		}
+	}
+
 	connFile := "internal/domain/db/" + db + "/connecton.go"
 	if !fileNotExists(connFile) {
 		fmt.Println("File already exists:", connFile)
@@ -40,12 +47,12 @@ func createRepo(ent entity) error {
 		return nil
 	}
 
-	dirR := filepath.Join("internal/domain/db", db)
-	if err := createDir(dirR); err != nil {
+	dir := filepath.Join("internal/domain/db", db)
+	if err := createDir(dir); err != nil {
 		return err
 	}
 
-	fileHelper := filepath.Join(dirR, "helpers.go")
+	fileHelper := filepath.Join(dir, "helpers.go")
 	if fileNotExists(fileHelper) {
 		if err := save(fileHelper, "templates/helpers."+db+".tmpl", nil); err != nil {
 			return err
@@ -80,7 +87,7 @@ func createRepo(ent entity) error {
 		tmpl = "templates/repository.db.simple.tmpl"
 	}
 
-	if err := save(filepath.Join(dirR, ent.snakeName+".go"), tmpl, data); err != nil {
+	if err := save(filepath.Join(dir, ent.snakeName+".go"), tmpl, data); err != nil {
 		return err
 	}
 
