@@ -1,5 +1,3 @@
-BUILD_DIR=bin
-
 build:
-	mkdir -p ${BUILD_DIR}
-	go build -ldflags="-s -w" -o ${BUILD_DIR}/clar
+	mkdir -p bin
+	go build -ldflags="-s -w" -o bin/clar

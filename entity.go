@@ -43,18 +43,20 @@ func entityCmd() *cobra.Command {
 			if err = ent.create(); err != nil {
 				fmt.Println(err)
 			}
-			if err = ent.createModel(); err != nil {
-				fmt.Println(err)
-			}
-			if err = save("internal/db/utils.go", "templates/db.utils.tmpl", nil); err != nil {
-				fmt.Println(err)
-			}
 			if err = createConnection(); err != nil {
 				fmt.Println(err)
 			}
 			if err = createRepo(ent); err != nil {
 				fmt.Println(err)
 			}
+			if err = createService(ent); err != nil {
+				fmt.Println(err)
+			}
+			/* if err = save("internal/domain/db/utils.go", "templates/db.utils.tmpl", nil); err != nil {
+				fmt.Println(err)
+			} */
+			/*
+			 */
 		},
 	}
 
@@ -64,40 +66,42 @@ func entityCmd() *cobra.Command {
 }
 
 type entity struct {
-	structName string
-	name       string
-	snakeName  string
-	table      string
-	nameRunes  []rune
-	symb       string
+	firstLowerName string
+	firstUpperName string
+	packageName    string
+	snakeName      string
+	tableName      string
+	nameRunes      []rune
+	symb           string
 
 	empty  bool
 	simple bool
 }
 
-func newEntity(name string, empty, simple bool) (ent *entity) {
-	ent = &entity{
+func newEntity(name string, empty, simple bool) entity {
+	ent := entity{
 		nameRunes: []rune(name),
 		snakeName: toSnake(name),
 		empty:     empty,
 		simple:    simple,
 	}
 	ent.symb = strings.ToLower(string(ent.nameRunes[0]))
-	ent.name = strings.ToLower(string(ent.nameRunes[0])) + string(ent.nameRunes[1:])
-	ent.structName = cases.Title(language.English, cases.NoLower).String(ent.name)
+	ent.firstLowerName = strings.ToLower(string(ent.nameRunes[0])) + string(ent.nameRunes[1:])
+	ent.firstUpperName = cases.Title(language.English, cases.NoLower).String(ent.firstLowerName)
+	ent.packageName = strings.ReplaceAll(ent.snakeName, "_", "")
 
-	ent.table = ent.snakeName
-	switch []rune(ent.table)[len(ent.table)-1] {
+	ent.tableName = ent.snakeName
+	switch []rune(ent.tableName)[len(ent.tableName)-1] {
 	case 's', 'x', 'h':
-		ent.table += "es"
+		ent.tableName += "es"
 
 	case 'y':
-		ent.table = string([]rune(ent.table)[:len(ent.table)-1]) + "ies"
+		ent.tableName = string([]rune(ent.tableName)[:len(ent.tableName)-1]) + "ies"
 
 	default:
-		ent.table += "s"
+		ent.tableName += "s"
 	}
-	return
+	return ent
 }
 
 func (ent *entity) create() error {
@@ -109,54 +113,18 @@ func (ent *entity) create() error {
 		tmplEntity = "entity.simple"
 	}
 
-	entityFilename := ent.snakeName + ".go"
-
-	dir := filepath.Join("internal/db", db, "entity")
+	dir := ent.getDir()
 	if err := createDir(dir); err != nil {
 		return err
 	}
-
 	data := struct {
-		ImportModels string
-		Entity       string
-		EntitySymb   string
-		EntityName   string
+		PackageName string
 	}{
-		ImportModels: filepath.Join(modulePath, "internal/domain/models"),
-		Entity:       ent.structName,
-		EntitySymb:   ent.symb,
-		EntityName:   ent.name,
+		PackageName: ent.packageName,
 	}
-	return save(filepath.Join(dir, entityFilename), "templates/"+tmplEntity+".tmpl", data)
+	return save(filepath.Join(dir, "entity.go"), "templates/"+tmplEntity+".tmpl", data)
 }
 
-func (ent *entity) createModel() error {
-	if ent.empty {
-		return nil
-	}
-	tmplModel := "model"
-	if ent.simple {
-		tmplModel = "model.simple"
-	}
-
-	dir := "internal/domain/models"
-	if err := createDir(dir); err != nil {
-		return err
-	}
-
-	fileErr := filepath.Join(dir, "errors.go")
-	if fileNotExists(fileErr) {
-		if err := save(fileErr, "templates/models.errors.tmpl", nil); err != nil {
-			return err
-		}
-	}
-
-	data := struct {
-		Entity     string
-		EntitySymb string
-	}{
-		Entity:     ent.structName,
-		EntitySymb: ent.symb,
-	}
-	return save(filepath.Join(dir, ent.snakeName+".go"), "templates/"+tmplModel+".tmpl", data)
+func (ent *entity) getDir() string {
+	return filepath.Join("internal/domain/", ent.snakeName)
 }

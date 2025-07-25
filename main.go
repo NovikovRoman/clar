@@ -91,11 +91,11 @@ func save(filename, tmpl string, data any) error {
 	if err != nil {
 		return err
 	}
-	return saveTemplate2(filename, b, data)
+	return saveTemplate(filename, b, data)
 }
 
 // saveTemplate creates a file from a template.
-func saveTemplate2(filename string, tmpl []byte, data any) error {
+func saveTemplate(filename string, tmpl []byte, data any) error {
 	var f *os.File
 	if _, err := os.Stat(filename); err == nil {
 		return errors.New(filename + " file exists.")

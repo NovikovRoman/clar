@@ -1,47 +1,34 @@
-package repositories
+package {{.DbType}}
 
 import (
 	"context"
-	"database/sql"
-	"errors"
 
-	"{{.ModulePath}}/internal/db/{{.DbType}}/entity"
-	"{{.ModulePath}}/internal/domain/models"
+	{{if .Alias}}{{.Alias}} {{end}}"{{.ModulePath}}/internal/domain/{{.SnakeName}}"
 	"github.com/jmoiron/sqlx"
 )
 
-type {{.EntityName}}Repository struct {
+type {{.FirstLowerName}}Repository struct {
 	table string
 	db    *sqlx.DB
 }
 
-func New{{.Entity}}Repository(db *sqlx.DB) *{{.EntityName}}Repository {
-	return &{{.EntityName}}Repository{
+func New{{.FirstUpperName}}Repository(db *sqlx.DB) *{{.FirstLowerName}}Repository {
+	return &{{.FirstLowerName}}Repository{
 		table: "{{.EntityTable}}",
 		db:    db,
 	}
 }
 
-func (r {{.EntityName}}Repository) Table() string {
+func (r {{.FirstLowerName}}Repository) Table() string {
 	return r.table
 }
 
-func (r *{{.EntityName}}Repository) ByID(ctx context.Context, id int64) (models.{{.Entity}}, error) {
-	var {{.EntityName}} entity.{{.Entity}}
-	err := r.db.GetContext(ctx, &{{.EntityName}}, "SELECT * FROM "+r.table+" WHERE id = $1", id)
-	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			err = models.ErrNotFound
-		}
-	}
-	return {{.EntityName}}.ToModel(), err
+func (r *{{.FirstLowerName}}Repository) ByID(ctx context.Context, id int64) ({{.Alias}}.Entity, error) {
+	var {{.EntitySymb}} {{.Alias}}.Entity
+	err := r.db.GetContext(ctx, &{{.EntitySymb}}, "SELECT * FROM "+r.table+" WHERE id = $1", id)
+	return {{.EntitySymb}}, err
 }
 
-func (r *{{.EntityName}}Repository) Save(ctx context.Context, {{.EntityName}} *models.{{.Entity}}) error {
-	{{.EntitySymb}} := entity.ModelTo{{.Entity}}(*{{.EntityName}})
-	if err := save(ctx, r.db, r.table, &{{.EntitySymb}}); err != nil {
-		return err
-	}
-	*{{.EntityName}} = {{.EntitySymb}}.ToModel()
-	return nil
+func (r *{{.FirstLowerName}}Repository) Save(ctx context.Context, {{.EntitySymb}} *{{.Alias}}.Entity) error {
+	return save(ctx, r.db, r.table, {{.EntitySymb}});
 }

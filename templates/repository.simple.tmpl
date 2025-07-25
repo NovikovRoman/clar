@@ -6,5 +6,4 @@ import (
 
 type Repository interface {
 	ByID(ctx context.Context, id int64) (Entity, error)
-	Save(ctx context.Context, {{.EntityName}} *Entity) error
 }

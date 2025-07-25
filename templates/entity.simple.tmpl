@@ -1,22 +1,10 @@
-package entity
+package {{.PackageName}}
 
-import (
-	"{{.ImportModels}}"
-)
-
-// {{.Entity}} entity structure.
-type {{.Entity}} struct {
+// Entity entity structure.
+type Entity struct {
 	ID int64 `db:"id" autoincrement:"true"`
 }
 
-func ({{.EntitySymb}} *{{.Entity}}) GetID() int64 {
-	return {{.EntitySymb}}.ID
-}
-
-func ({{.EntitySymb}} {{.Entity}}) ToModel() models.{{.Entity}} {
-	return models.{{.Entity}}({{.EntitySymb}})
-}
-
-func ModelTo{{.Entity}}({{.EntitySymb}} models.{{.Entity}}) {{.Entity}} {
-	return {{.Entity}}({{.EntitySymb}})
+func (e *Entity) GetID() int64 {
+	return e.ID
 }

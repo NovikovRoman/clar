@@ -3,12 +3,20 @@ package main
 import (
 	"fmt"
 	"path/filepath"
+	"strings"
 )
 
 func createConnection() error {
-	filepath := "internal/db/" + db + "/connecton.go"
-	if !fileNotExists(filepath) {
-		fmt.Println("File already exists:", filepath)
+	dir := filepath.Join("internal/domain/db", db)
+	if fileNotExists(dir) {
+		if err := createDir(dir); err != nil {
+			return err
+		}
+	}
+
+	connFile := "internal/domain/db/" + db + "/connecton.go"
+	if !fileNotExists(connFile) {
+		fmt.Println("File already exists:", connFile)
 		return nil
 	}
 
@@ -17,7 +25,7 @@ func createConnection() error {
 	}{
 		ModulePath: modulePath,
 	}
-	err := save(filepath, "templates/connection."+db+".tmpl", data)
+	err := save(connFile, "templates/connection."+db+".tmpl", data)
 	if err != nil {
 		return err
 	}
@@ -27,21 +35,17 @@ func createConnection() error {
 	return err
 }
 
-func createRepo(ent *entity) error {
+func createRepo(ent entity) error {
 	if ent.empty {
 		return nil
 	}
 
-	dirR := "internal/repository"
+	dirR := filepath.Join("internal/domain/db", db)
 	if err := createDir(dirR); err != nil {
 		return err
 	}
-	dirDbR := filepath.Join("internal/db", db, "repositories")
-	if err := createDir(dirDbR); err != nil {
-		return err
-	}
 
-	fileHelper := filepath.Join(dirDbR, "helpers.go")
+	fileHelper := filepath.Join(dirR, "helpers.go")
 	if fileNotExists(fileHelper) {
 		if err := save(fileHelper, "templates/helpers."+db+".tmpl", nil); err != nil {
 			return err
@@ -49,19 +53,26 @@ func createRepo(ent *entity) error {
 	}
 
 	data := struct {
-		ModulePath  string
-		DbType      string
-		Entity      string
-		EntitySymb  string
-		EntityName  string
-		EntityTable string
+		ModulePath     string
+		DbType         string
+		FirstUpperName string
+		EntitySymb     string
+		FirstLowerName string
+		EntityTable    string
+		SnakeName      string
+		Alias          string
 	}{
-		ModulePath:  modulePath,
-		DbType:      db,
-		Entity:      ent.structName,
-		EntitySymb:  ent.symb,
-		EntityName:  ent.name,
-		EntityTable: ent.table,
+		ModulePath:     modulePath,
+		DbType:         db,
+		FirstUpperName: ent.firstUpperName,
+		EntitySymb:     ent.symb,
+		FirstLowerName: ent.firstLowerName,
+		EntityTable:    ent.tableName,
+		SnakeName:      ent.snakeName,
+		Alias:          ent.snakeName,
+	}
+	if strings.Contains(ent.snakeName, "_") {
+		data.Alias = ent.packageName
 	}
 
 	tmpl := "templates/repository.db.tmpl"
@@ -69,27 +80,20 @@ func createRepo(ent *entity) error {
 		tmpl = "templates/repository.db.simple.tmpl"
 	}
 
-	if err := save(filepath.Join(dirDbR, ent.name+".go"), tmpl, data); err != nil {
+	if err := save(filepath.Join(dirR, ent.snakeName+".go"), tmpl, data); err != nil {
 		return err
 	}
 
-	if !ent.simple {
-		err := save(filepath.Join(dirR, data.EntityName+".go"), "templates/repository.tmpl", data)
-		if err != nil {
-			return err
-		}
-		fileRepositories := filepath.Join(dirR, "repositories.go")
-		if fileNotExists(fileRepositories) {
-			if err = save(fileRepositories, "templates/repositories.tmpl", data); err != nil {
-				return err
-			}
-		}
-		fileDbRepositories := filepath.Join(dirDbR, "repositories.go")
-		if fileNotExists(fileDbRepositories) {
-			if err = save(fileDbRepositories, "templates/repositories.db.tmpl", data); err != nil {
-				return err
-			}
-		}
+	tmpl = "templates/repository.tmpl"
+	if ent.simple {
+		tmpl = "templates/repository.simple.tmpl"
 	}
-	return nil
+	data2 := struct {
+		PackageName string
+		EntityName  string
+	}{
+		PackageName: ent.packageName,
+		EntityName:  ent.firstLowerName,
+	}
+	return save(filepath.Join(ent.getDir(), "repository.go"), tmpl, data2)
 }
