@@ -2,7 +2,9 @@ package pg
 
 import (
 	"context"
+	"errors"
 	"reflect"
+	"strings"
 	"time"
 	"unsafe"
 
@@ -30,6 +32,7 @@ const (
 	tagName          = "db"
 	tagReadOnly      = "readonly"
 	tagAutoincrement = "autoincrement"
+	tagConflict      = "conflict"
 )
 
 func emptyID[T IDType](ent simpleBaseEntity[T]) bool {
@@ -67,6 +70,36 @@ func save[T IDType](ctx context.Context, db *sqlx.DB, table string, ent simpleBa
 	return
 }
 
+// save saves the record without an autoincrement key to the DB.
+//
+// New record - creates in a DB, existing - updates in a DB.
+//
+// In `ent` you must specify the conflict fields.
+func saveAny(ctx context.Context, db *sqlx.DB, table string, ent any) error {
+	conflicts := conflictFields(ent)
+	if len(conflicts) == 0 {
+		return errors.New("Conflict fields not found.")
+	}
+
+	fields := tableFields(ent, true)
+	set := make([]string, len(fields))
+	values := make([]string, len(fields))
+	updated := make([]string, len(fields))
+	for i, name := range tableFields(ent, true) {
+		set[i] = "" + name + ""
+		values[i] = ":" + name
+		if !slices.Contains(conflicts, name) {
+			updated = append(updated, name+"=EXCLUDED."+name)
+		}
+	}
+
+	query := `INSERT INTO ` + table + ` (` + strings.Join(set, ",") + `) VALUES (` + strings.Join(values, ",") + `)
+	ON CONFLICT (` + strings.Join(conflicts, ",") + `)
+	DO UPDATE SET ` + strings.Join(updated, ",") + ` RETURNING *;`
+	_, err := db.NamedExecContext(ctx, query, ent)
+	return err
+}
+
 // create creates a record in the DB.
 //
 // If the entry:
@@ -93,19 +126,7 @@ func create[T IDType](ctx context.Context, db *sqlx.DB, table string, ent simple
 	}
 
 	set, values := fieldsForInsert(ent)
-
-	nameID := ""
-	dbNameID := ""
-	m := reflectx.NewMapperFunc(tagAutoincrement, func(s string) string { return s })
-	for _, n := range m.TypeMap(reflect.TypeOf(ent)).Names {
-		if n.Field.Tag.Get(tagAutoincrement) != "true" {
-			continue
-		}
-		dbNameID = n.Field.Tag.Get(tagName)
-		nameID = n.Field.Name
-		break
-	}
-
+	nameID, dbNameID := findAutoincrement(ent)
 	if nameID == "" {
 		query := "INSERT INTO " + table + " (" + set + ") VALUES (" + values + ")"
 		_, err = db.NamedExecContext(ctx, query, ent)
@@ -128,7 +149,7 @@ func create[T IDType](ctx context.Context, db *sqlx.DB, table string, ent simple
 	}
 
 	v := reflect.ValueOf(ent)
-	if v.Kind() == reflect.Ptr {
+	if v.Kind() == reflect.Pointer {
 		v = v.Elem()
 	}
 	switch newID := id.(type) {
@@ -146,7 +167,7 @@ func create[T IDType](ctx context.Context, db *sqlx.DB, table string, ent simple
 
 func setCreatedAt[T IDType](ent baseEntity[T], t time.Time) {
 	v := reflect.ValueOf(ent)
-	if v.Kind() == reflect.Ptr {
+	if v.Kind() == reflect.Pointer {
 		v = v.Elem()
 	}
 	v.FieldByName("CreatedAt").Set(reflect.ValueOf(t))
@@ -154,7 +175,7 @@ func setCreatedAt[T IDType](ent baseEntity[T], t time.Time) {
 
 func setUpdatedAt[T IDType](ent baseEntity[T], t time.Time) {
 	v := reflect.ValueOf(ent)
-	if v.Kind() == reflect.Ptr {
+	if v.Kind() == reflect.Pointer {
 		v = v.Elem()
 	}
 	v.FieldByName("UpdatedAt").Set(reflect.ValueOf(t))
@@ -162,7 +183,7 @@ func setUpdatedAt[T IDType](ent baseEntity[T], t time.Time) {
 
 func setDeletedAt[T IDType](ent baseEntity[T], t *time.Time) {
 	v := reflect.ValueOf(ent)
-	if v.Kind() == reflect.Ptr {
+	if v.Kind() == reflect.Pointer {
 		v = v.Elem()
 	}
 
@@ -209,4 +230,33 @@ func tableFields(ent any, forInsert bool) (fields []string) {
 		}
 	}
 	return
+}
+
+func conflictFields(ent any) []string {
+	fields := []string{}
+	m := reflectx.NewMapperFunc(tagName, func(s string) string { return s })
+	for _, n := range m.TypeMap(reflect.TypeOf(ent)).Names {
+		if n.Field.Tag.Get(tagConflict) != "true" {
+			continue
+		}
+		if len(n.Index) == 1 {
+			fields = append(fields, n.Path)
+		}
+	}
+	return fields
+}
+
+func findAutoincrement(ent any) (string, string) {
+	name := ""
+	dbName := ""
+	m := reflectx.NewMapperFunc(tagAutoincrement, func(s string) string { return s })
+	for _, n := range m.TypeMap(reflect.TypeOf(ent)).Names {
+		if n.Field.Tag.Get(tagAutoincrement) != "true" {
+			continue
+		}
+		dbName = n.Field.Tag.Get(tagName)
+		name = n.Field.Name
+		break
+	}
+	return name, dbName
 }

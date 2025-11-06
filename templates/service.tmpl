@@ -1,13 +1,17 @@
 package {{.PackageName}}
 
 type Service interface {
-    // our methods here
+    Table() string
 }
 
 type service struct {
-    // our fields here
+    repo Repository
 }
 
-func NewService() *service {
-	return &service{}
+func NewService(repo Repository) *service {
+	return &service{repo:repo}
+}
+
+func (s *service) Table() string {
+    return s.repo.Table()
 }

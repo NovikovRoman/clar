@@ -1,0 +1,91 @@
+DO $$ BEGIN
+
+IF NOT EXISTS (
+    SELECT
+        1
+    FROM
+        pg_type
+    WHERE
+        typname = 'text512'
+) THEN CREATE DOMAIN text512 AS TEXT CHECK (LENGTH(VALUE) <= 512);
+
+END IF;
+
+IF NOT EXISTS (
+    SELECT
+        1
+    FROM
+        pg_type
+    WHERE
+        typname = 'text256'
+) THEN CREATE DOMAIN text256 AS TEXT CHECK (LENGTH(VALUE) <= 256);
+
+END IF;
+
+IF NOT EXISTS (
+    SELECT
+        1
+    FROM
+        pg_type
+    WHERE
+        typname = 'text128'
+) THEN CREATE DOMAIN text128 AS TEXT CHECK (LENGTH(VALUE) <= 128);
+
+END IF;
+
+IF NOT EXISTS (
+    SELECT
+        1
+    FROM
+        pg_type
+    WHERE
+        typname = 'text64'
+) THEN CREATE DOMAIN text64 AS TEXT CHECK (LENGTH(VALUE) <= 64);
+
+END IF;
+
+IF NOT EXISTS (
+    SELECT
+        1
+    FROM
+        pg_type
+    WHERE
+        typname = 'text32'
+) THEN CREATE DOMAIN text32 AS TEXT CHECK (LENGTH(VALUE) <= 32);
+
+END IF;
+
+IF NOT EXISTS (
+    SELECT
+        1
+    FROM
+        pg_type
+    WHERE
+        typname = 'text16'
+) THEN CREATE DOMAIN text16 AS TEXT CHECK (LENGTH(VALUE) <= 16);
+
+END IF;
+
+IF NOT EXISTS (
+    SELECT
+        1
+    FROM
+        pg_type
+    WHERE
+        typname = 'text8'
+) THEN CREATE DOMAIN text8 AS TEXT CHECK (LENGTH(VALUE) <= 8);
+
+END IF;
+
+IF NOT EXISTS (
+    SELECT
+        1
+    FROM
+        pg_type
+    WHERE
+        typname = 'text2'
+) THEN CREATE DOMAIN text2 AS TEXT CHECK (LENGTH(VALUE) <= 2);
+
+END IF;
+
+END $$;

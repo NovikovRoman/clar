@@ -1,0 +1,91 @@
+DO $$ BEGIN
+
+IF EXISTS (
+    SELECT
+        1
+    FROM
+        pg_type
+    WHERE
+        typname = 'text512'
+) THEN EXECUTE 'DROP DOMAIN text512';
+
+END IF;
+
+IF EXISTS (
+    SELECT
+        1
+    FROM
+        pg_type
+    WHERE
+        typname = 'text256'
+) THEN EXECUTE 'DROP DOMAIN text256';
+
+END IF;
+
+IF EXISTS (
+    SELECT
+        1
+    FROM
+        pg_type
+    WHERE
+        typname = 'text128'
+) THEN EXECUTE 'DROP DOMAIN text128';
+
+END IF;
+
+IF EXISTS (
+    SELECT
+        1
+    FROM
+        pg_type
+    WHERE
+        typname = 'text64'
+) THEN EXECUTE 'DROP DOMAIN text64';
+
+END IF;
+
+IF EXISTS (
+    SELECT
+        1
+    FROM
+        pg_type
+    WHERE
+        typname = 'text32'
+) THEN EXECUTE 'DROP DOMAIN text32';
+
+END IF;
+
+IF EXISTS (
+    SELECT
+        1
+    FROM
+        pg_type
+    WHERE
+        typname = 'text16'
+) THEN EXECUTE 'DROP DOMAIN text16';
+
+END IF;
+
+IF EXISTS (
+    SELECT
+        1
+    FROM
+        pg_type
+    WHERE
+        typname = 'text8'
+) THEN EXECUTE 'DROP DOMAIN text8';
+
+END IF;
+
+IF EXISTS (
+    SELECT
+        1
+    FROM
+        pg_type
+    WHERE
+        typname = 'text2'
+) THEN EXECUTE 'DROP DOMAIN text2';
+
+END IF;
+
+END $$;

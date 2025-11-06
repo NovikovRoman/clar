@@ -30,10 +30,29 @@ func createMigrate() error {
 	if err := save(path+"/migrate.go", "templates/migrate."+db+".tmpl", nil); err != nil {
 		return err
 	}
-	err := save(filepath.Join(pathSql, "202205041600_begin.up.sql"), "templates/migrate.up."+db+".tmpl", nil)
-	if err != nil {
+	switch db {
+	case dbPostgres:
+		err := save(filepath.Join(pathSql, "202505200000_types.up.sql"), "templates/migrate.pg.types.up.tmpl", nil)
+		if err != nil {
+			return err
+		}
+		err = save(filepath.Join(pathSql, "202505200000_types.down.sql"), "templates/migrate.pg.types.down.tmpl", nil)
+		if err != nil {
+			return err
+		}
+		err = save(filepath.Join(pathSql, "202505201000_users.up.sql"), "templates/migrate.pg.users.up.tmpl", nil)
+		if err != nil {
+			return err
+		}
+		err = save(filepath.Join(pathSql, "202505201000_users.down.sql"), "templates/migrate.users.down.tmpl", nil)
+		return err
+
+	default:
+		err := save(filepath.Join(pathSql, "202505200000_users.up.sql"), "templates/migrate."+db+".users.up.tmpl", nil)
+		if err != nil {
+			return err
+		}
+		err = save(filepath.Join(pathSql, "202505200000_users.down.sql"), "templates/migrate.users.down.tmpl", nil)
 		return err
 	}
-	err = save(filepath.Join(pathSql, "202205041600_begin.down.sql"), "templates/migrate.down.tmpl", nil)
-	return err
 }

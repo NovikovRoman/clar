@@ -5,6 +5,7 @@ import (
 )
 
 type Repository interface {
+	Table() string
 	ByID(ctx context.Context, id int64) (Entity, error)
 	Save(ctx context.Context, {{.EntityName}} *Entity) error
 }
